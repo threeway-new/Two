@@ -185,16 +185,24 @@
                             <textarea id="customerAddress" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your complete delivery address"></textarea>
                         </div>
 
-                        <!-- Live Location -->
+                        <!-- Live Location - MANDATORY -->
                         <div>
-                            <label class="block text-gray-700 font-medium mb-2">📍 Your Current Location</label>
-                            <button type="button" onclick="getCurrentLocation()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium mb-2">
-                                📍 Get My Live Location
+                            <label class="block text-gray-700 font-medium mb-2">📍 Your Current Location *</label>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                                <p class="text-yellow-800 text-sm font-medium">⚡ Required for Fast Delivery</p>
+                                <p class="text-yellow-700 text-xs">We need your exact location to ensure quick and accurate delivery to your doorstep.</p>
+                            </div>
+                            <button type="button" onclick="getCurrentLocation()" class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium mb-2">
+                                📍 Capture My Live Location (Required)
                             </button>
                             <div id="locationStatus" class="hidden"></div>
-                            <input type="hidden" id="userLatitude">
-                            <input type="hidden" id="userLongitude">
-                            <input type="text" id="locationDisplay" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" placeholder="Location will appear here after capturing">
+                            <input type="hidden" id="userLatitude" required>
+                            <input type="hidden" id="userLongitude" required>
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <input type="text" id="latitudeDisplay" readonly class="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm" placeholder="Latitude">
+                                <input type="text" id="longitudeDisplay" readonly class="px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm" placeholder="Longitude">
+                            </div>
+                            <input type="text" id="locationDisplay" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 mt-2" placeholder="📍 Click button above to capture your location">
                         </div>
 
                         <!-- Quantity -->
@@ -281,6 +289,8 @@
             // Reset form
             document.getElementById('orderForm').reset();
             document.getElementById('locationDisplay').value = '';
+            document.getElementById('latitudeDisplay').value = '';
+            document.getElementById('longitudeDisplay').value = '';
             document.getElementById('locationStatus').classList.add('hidden');
             userLocation = {};
         }
@@ -292,10 +302,12 @@
         function getCurrentLocation() {
             const statusDiv = document.getElementById('locationStatus');
             const locationDisplay = document.getElementById('locationDisplay');
+            const latitudeDisplay = document.getElementById('latitudeDisplay');
+            const longitudeDisplay = document.getElementById('longitudeDisplay');
             
             statusDiv.classList.remove('hidden', 'location-success', 'location-error');
             statusDiv.classList.add('location-loading');
-            statusDiv.textContent = '📍 Getting your location...';
+            statusDiv.textContent = '📍 Getting your location... (This may take a few seconds)';
 
             if (!navigator.geolocation) {
                 statusDiv.classList.remove('location-loading');
@@ -304,51 +316,107 @@
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    userLocation.latitude = position.coords.latitude;
-                    userLocation.longitude = position.coords.longitude;
-                    userLocation.accuracy = position.coords.accuracy;
-                    
-                    document.getElementById('userLatitude').value = userLocation.latitude;
-                    document.getElementById('userLongitude').value = userLocation.longitude;
-                    
-                    const locationText = `Lat: ${userLocation.latitude.toFixed(6)}, Lng: ${userLocation.longitude.toFixed(6)}`;
-                    locationDisplay.value = locationText;
-                    
-                    statusDiv.classList.remove('location-loading');
-                    statusDiv.classList.add('location-success');
-                    statusDiv.textContent = `✅ Location captured successfully! (Accuracy: ${Math.round(userLocation.accuracy)}m)`;
-                },
-                function(error) {
-                    statusDiv.classList.remove('location-loading');
-                    statusDiv.classList.add('location-error');
-                    
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            statusDiv.textContent = '❌ Location access denied. Please enable location permissions.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            statusDiv.textContent = '❌ Location information is unavailable.';
-                            break;
-                        case error.TIMEOUT:
-                            statusDiv.textContent = '❌ Location request timed out. Please try again.';
-                            break;
-                        default:
-                            statusDiv.textContent = '❌ An unknown error occurred while getting location.';
-                            break;
+            // Try with high accuracy first, then fallback to lower accuracy
+            const tryHighAccuracy = () => {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLocation.latitude = position.coords.latitude;
+                        userLocation.longitude = position.coords.longitude;
+                        userLocation.accuracy = position.coords.accuracy;
+                        
+                        // Fill all location fields
+                        document.getElementById('userLatitude').value = userLocation.latitude;
+                        document.getElementById('userLongitude').value = userLocation.longitude;
+                        latitudeDisplay.value = userLocation.latitude.toFixed(6);
+                        longitudeDisplay.value = userLocation.longitude.toFixed(6);
+                        
+                        const locationText = `✅ Location Captured: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`;
+                        locationDisplay.value = locationText;
+                        
+                        statusDiv.classList.remove('location-loading');
+                        statusDiv.classList.add('location-success');
+                        statusDiv.textContent = `✅ Location captured successfully! (Accuracy: ${Math.round(userLocation.accuracy)}m) - Ready to place order!`;
+                    },
+                    function(error) {
+                        // If high accuracy fails, try with lower accuracy
+                        if (error.code === error.TIMEOUT) {
+                            statusDiv.textContent = '📍 Trying with lower accuracy...';
+                            tryLowAccuracy();
+                        } else {
+                            handleLocationError(error);
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 8000,
+                        maximumAge: 30000
                     }
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
+                );
+            };
+
+            const tryLowAccuracy = () => {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        userLocation.latitude = position.coords.latitude;
+                        userLocation.longitude = position.coords.longitude;
+                        userLocation.accuracy = position.coords.accuracy;
+                        
+                        // Fill all location fields
+                        document.getElementById('userLatitude').value = userLocation.latitude;
+                        document.getElementById('userLongitude').value = userLocation.longitude;
+                        latitudeDisplay.value = userLocation.latitude.toFixed(6);
+                        longitudeDisplay.value = userLocation.longitude.toFixed(6);
+                        
+                        const locationText = `✅ Location Captured: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`;
+                        locationDisplay.value = locationText;
+                        
+                        statusDiv.classList.remove('location-loading');
+                        statusDiv.classList.add('location-success');
+                        statusDiv.textContent = `✅ Location captured! (Accuracy: ${Math.round(userLocation.accuracy)}m - Lower precision) - Ready to place order!`;
+                    },
+                    function(error) {
+                        handleLocationError(error);
+                    },
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 15000,
+                        maximumAge: 300000
+                    }
+                );
+            };
+
+            const handleLocationError = (error) => {
+                statusDiv.classList.remove('location-loading');
+                statusDiv.classList.add('location-error');
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        statusDiv.innerHTML = '❌ Location access denied.<br><strong>REQUIRED:</strong> Please enable location permissions in your browser and try again to place order.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        statusDiv.innerHTML = '❌ Location unavailable.<br><strong>REQUIRED:</strong> Please check your internet connection and GPS settings.';
+                        break;
+                    case error.TIMEOUT:
+                        statusDiv.innerHTML = '❌ Location timeout.<br><strong>REQUIRED:</strong> Please ensure GPS is enabled and try again. Location is mandatory for delivery.';
+                        break;
+                    default:
+                        statusDiv.innerHTML = '❌ Location error.<br><strong>REQUIRED:</strong> Please try again. Location is mandatory for fast delivery.';
+                        break;
                 }
-            );
+            };
+
+            // Start with high accuracy attempt
+            tryHighAccuracy();
         }
 
         function submitOrder(event) {
             event.preventDefault();
+            
+            // Check if location is captured (MANDATORY)
+            if (!userLocation.latitude || !userLocation.longitude) {
+                alert('⚠️ Location Required!\n\nPlease capture your live location first. This is mandatory for fast and accurate delivery to your doorstep.');
+                return;
+            }
             
             // Get form data
             const name = document.getElementById('customerName').value;
@@ -372,13 +440,12 @@
             if (email) message += `Email: ${email}\n`;
             message += `\n🏠 *Delivery Address:*\n${address}\n\n`;
             
-            // Add location if captured
-            if (userLocation.latitude && userLocation.longitude) {
-                message += `📍 *Customer Live Location:*\n`;
-                message += `Latitude: ${userLocation.latitude}\n`;
-                message += `Longitude: ${userLocation.longitude}\n`;
-                message += `Google Maps: https://maps.google.com/?q=${userLocation.latitude},${userLocation.longitude}\n\n`;
-            }
+            // Add location (MANDATORY - Always present)
+            message += `📍 *CUSTOMER LIVE LOCATION:*\n`;
+            message += `🎯 Latitude: ${userLocation.latitude}\n`;
+            message += `🎯 Longitude: ${userLocation.longitude}\n`;
+            message += `🗺️ Google Maps: https://maps.google.com/?q=${userLocation.latitude},${userLocation.longitude}\n`;
+            message += `📏 Location Accuracy: ${Math.round(userLocation.accuracy)}m\n\n`;
             
             message += `🏪 *Service Location:* ${selectedServiceLocation.charAt(0).toUpperCase() + selectedServiceLocation.slice(1)}\n\n`;
             
@@ -412,5 +479,5 @@
             }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98d8007d30ed178a',t:'MTc2MDI4NjgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98d80d84f47b7f3a',t:'MTc2MDI4NzM3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
