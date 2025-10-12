@@ -1,75 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Share My Location on WhatsApp</title>
-  <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      text-align: center;
-      background: #f5f7fa;
-      color: #333;
-      margin-top: 80px;
-    }
-    h2 {
-      color: #007bff;
-    }
-    button {
-      padding: 12px 25px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      background-color: #25D366;
-      color: white;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-    button:hover {
-      background-color: #1ebf5f;
-    }
-    footer {
-      margin-top: 40px;
-      font-size: 13px;
-      color: #666;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopEasy - Order with Location</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            transition: all 0.3s ease;
+        }
+        .whatsapp-btn:hover {
+            background: linear-gradient(135deg, #128C7E, #075E54);
+            transform: scale(1.05);
+        }
+        .location-btn {
+            transition: all 0.3s ease;
+        }
+        .location-btn.active {
+            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+            color: white;
+        }
+        .form-container {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .location-status {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .location-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .location-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .location-loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
 </head>
-<body>
-  <h2>Send My Live Location on WhatsApp</h2>
-  <p>Click the button below to share your current GPS location.</p>
-  <button id="sendBtn">📍 Share My Location</button>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-indigo-600">🛍️ ShopEasy</h1>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600">Service Location:</span>
+                    <button onclick="selectServiceLocation('khanapur')" class="location-btn px-4 py-2 rounded-lg border-2 border-indigo-200 text-indigo-600 font-medium" id="khanapur-btn">
+                        📍 Khanapur
+                    </button>
+                    <button onclick="selectServiceLocation('nirmal')" class="location-btn px-4 py-2 rounded-lg border-2 border-indigo-200 text-indigo-600 font-medium" id="nirmal-btn">
+                        📍 Nirmal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-  <footer>© 2025 Location Share Demo</footer>
+    <!-- Location Status -->
+    <div class="bg-indigo-600 text-white py-3">
+        <div class="container mx-auto px-4 text-center">
+            <p id="service-location-status" class="text-lg font-medium">Please select your service location to get started</p>
+        </div>
+    </div>
 
-  <script>
-    document.getElementById("sendBtn").addEventListener("click", function() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Products Grid -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Products</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Product 1 -->
+                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center">
+                        <span class="text-6xl">👕</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Premium T-Shirt</h3>
+                        <p class="text-gray-600 mb-4">Comfortable cotton t-shirt available in multiple colors</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-indigo-600">₹599</span>
+                            <button onclick="openOrderForm('Premium T-Shirt', '599')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
+                                📝 Order Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-            // ✅ Your WhatsApp number
-            const phone = "917799086877";
+                <!-- Product 2 -->
+                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-blue-200 to-blue-300 flex items-center justify-center">
+                        <span class="text-6xl">👖</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Denim Jeans</h3>
+                        <p class="text-gray-600 mb-4">High-quality denim jeans with perfect fit</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-indigo-600">₹1,299</span>
+                            <button onclick="openOrderForm('Denim Jeans', '1299')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
+                                📝 Order Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-            // Message with Google Maps link
-            const message = `My current location: https://www.google.com/maps?q=${lat},${lon}`;
+                <!-- Product 3 -->
+                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-green-200 to-green-300 flex items-center justify-center">
+                        <span class="text-6xl">👟</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sports Shoes</h3>
+                        <p class="text-gray-600 mb-4">Comfortable sports shoes for daily activities</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-indigo-600">₹2,499</span>
+                            <button onclick="openOrderForm('Sports Shoes', '2499')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
+                                📝 Order Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
-            // Generate WhatsApp link
-            const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    <!-- Order Form Modal -->
+    <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="form-container rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">📝 Order Details</h3>
+                    <button onclick="closeOrderForm()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
 
-            // Open WhatsApp chat in new tab
-            window.open(url, "_blank");
-          },
-          function(error) {
-            alert("Unable to get your location. Please allow permission.");
-          }
-        );
-      } else {
-        alert("Geolocation not supported by your browser.");
-      }
-    });
-  </script>
-</body>
+                <!-- Product Info -->
+                <div class="bg-indigo-50 p-4 rounded-lg mb-6">
+                    <h4 class="font-bold text-indigo-800" id="modal-product-name">Product Name</h4>
+                    <p class="text-indigo-600 text-xl font-bold" id="modal-product-price">₹0</p>
+                </div>
+
+                <!-- Customer Details Form -->
+                <form id="orderForm" onsubmit="submitOrder(event)">
+                    <div class="space-y-4">
+                        <!-- Name -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">👤 Full Name *</label>
+                            <input type="text" id="customerName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your full name">
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">📱 Phone Number *</label>
+                            <input type="tel" id="customerPhone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your phone number">
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">📧 Email</label>
+                            <input type="email" id="customerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your email (optional)">
+                        </div>
+
+                        <!-- Address -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">🏠 Delivery Address *</label>
+                            <textarea id="customerAddress" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your complete delivery address"></textarea>
+                        </div>
+
+                        <!-- Live Location -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">📍 Your Current Location</label>
+                            <button type="button" onclick="getCurrentLocation()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium mb-2">
+                                📍 Get My Live Location
+                            </button>
+                            <div id="locationStatus" class="hidden"></div>
+                            <input type="hidden" id="userLatitude">
+                            <input type="hidden" id="userLongitude">
+                            <input type="text" id="locationDisplay" readonly class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50" placeholder="Location will appear here after capturing">
+                        </div>
+
+                        <!-- Quantity -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">🔢 Quantity</label>
+                            <select id="quantity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+
+                        <!-- Special Instructions -->
+                        <div>
+                            <label class="block text-gray-700 font-medium mb-2">📝 Special Instructions</label>
+                            <textarea id="specialInstructions" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Any special requirements or notes (optional)"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full whatsapp-btn text-white px-6 py-3 rounded-lg font-medium text-lg mt-6">
+                        💬 Send Order via WhatsApp
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <h3 class="text-xl font-bold mb-4">ShopEasy</h3>
+            <p class="text-gray-400 mb-4">Your trusted local shopping partner</p>
+            <div class="flex justify-center space-x-8">
+                <div>
+                    <h4 class="font-semibold mb-2">📍 Khanapur</h4>
+                    <p class="text-gray-400">WhatsApp: 7799086877</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-2">📍 Nirmal</h4>
+                    <p class="text-gray-400">WhatsApp: 7993477015</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let selectedServiceLocation = '';
+        let currentProduct = {};
+        let userLocation = {};
+        
+        let whatsappNumbers = {
+            'khanapur': '7799086877',
+            'nirmal': '7993477015'
+        };
+
+        function selectServiceLocation(location) {
+            selectedServiceLocation = location;
+            
+            // Update button styles
+            document.querySelectorAll('.location-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(location + '-btn').classList.add('active');
+            
+            // Update status message
+            const locationName = location.charAt(0).toUpperCase() + location.slice(1);
+            document.getElementById('service-location-status').textContent = `📍 Service Location: ${locationName} | WhatsApp: ${whatsappNumbers[location]}`;
+        }
+
+        function openOrderForm(productName, price) {
+            if (!selectedServiceLocation) {
+                alert('Please select your service location first!');
+                return;
+            }
+            
+            currentProduct = { name: productName, price: price };
+            document.getElementById('modal-product-name').textContent = productName;
+            document.getElementById('modal-product-price').textContent = `₹${price}`;
+            document.getElementById('orderModal').classList.remove('hidden');
+            
+            // Reset form
+            document.getElementById('orderForm').reset();
+            document.getElementById('locationDisplay').value = '';
+            document.getElementById('locationStatus').classList.add('hidden');
+            userLocation = {};
+        }
+
+        function closeOrderForm() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+
+        function getCurrentLocation() {
+            const statusDiv = document.getElementById('locationStatus');
+            const locationDisplay = document.getElementById('locationDisplay');
+            
+            statusDiv.classList.remove('hidden', 'location-success', 'location-error');
+            statusDiv.classList.add('location-loading');
+            statusDiv.textContent = '📍 Getting your location...';
+
+            if (!navigator.geolocation) {
+                statusDiv.classList.remove('location-loading');
+                statusDiv.classList.add('location-error');
+                statusDiv.textContent = '❌ Geolocation is not supported by this browser.';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    userLocation.latitude = position.coords.latitude;
+                    userLocation.longitude = position.coords.longitude;
+                    userLocation.accuracy = position.coords.accuracy;
+                    
+                    document.getElementById('userLatitude').value = userLocation.latitude;
+                    document.getElementById('userLongitude').value = userLocation.longitude;
+                    
+                    const locationText = `Lat: ${userLocation.latitude.toFixed(6)}, Lng: ${userLocation.longitude.toFixed(6)}`;
+                    locationDisplay.value = locationText;
+                    
+                    statusDiv.classList.remove('location-loading');
+                    statusDiv.classList.add('location-success');
+                    statusDiv.textContent = `✅ Location captured successfully! (Accuracy: ${Math.round(userLocation.accuracy)}m)`;
+                },
+                function(error) {
+                    statusDiv.classList.remove('location-loading');
+                    statusDiv.classList.add('location-error');
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            statusDiv.textContent = '❌ Location access denied. Please enable location permissions.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            statusDiv.textContent = '❌ Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            statusDiv.textContent = '❌ Location request timed out. Please try again.';
+                            break;
+                        default:
+                            statusDiv.textContent = '❌ An unknown error occurred while getting location.';
+                            break;
+                    }
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        }
+
+        function submitOrder(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const email = document.getElementById('customerEmail').value;
+            const address = document.getElementById('customerAddress').value;
+            const quantity = document.getElementById('quantity').value;
+            const instructions = document.getElementById('specialInstructions').value;
+            
+            // Calculate total price
+            const totalPrice = currentProduct.price * quantity;
+            
+            // Build WhatsApp message
+            let message = `🛍️ *NEW ORDER*\n\n`;
+            message += `📦 *Product:* ${currentProduct.name}\n`;
+            message += `💰 *Price:* ₹${currentProduct.price} x ${quantity} = ₹${totalPrice}\n\n`;
+            
+            message += `👤 *Customer Details:*\n`;
+            message += `Name: ${name}\n`;
+            message += `Phone: ${phone}\n`;
+            if (email) message += `Email: ${email}\n`;
+            message += `\n🏠 *Delivery Address:*\n${address}\n\n`;
+            
+            // Add location if captured
+            if (userLocation.latitude && userLocation.longitude) {
+                message += `📍 *Customer Live Location:*\n`;
+                message += `Latitude: ${userLocation.latitude}\n`;
+                message += `Longitude: ${userLocation.longitude}\n`;
+                message += `Google Maps: https://maps.google.com/?q=${userLocation.latitude},${userLocation.longitude}\n\n`;
+            }
+            
+            message += `🏪 *Service Location:* ${selectedServiceLocation.charAt(0).toUpperCase() + selectedServiceLocation.slice(1)}\n\n`;
+            
+            if (instructions) {
+                message += `📝 *Special Instructions:*\n${instructions}\n\n`;
+            }
+            
+            message += `⏰ *Order Time:* ${new Date().toLocaleString()}\n\n`;
+            message += `Please confirm this order and provide delivery timeline.`;
+            
+            // Send to WhatsApp
+            const phoneNumber = whatsappNumbers[selectedServiceLocation];
+            const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(message)}`;
+            
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            // Close modal and show success
+            closeOrderForm();
+            alert('Order details sent to WhatsApp! Our team will contact you shortly.');
+        }
+
+        // Auto-select first location on page load
+        window.addEventListener('load', function() {
+            selectServiceLocation('khanapur');
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('orderModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOrderForm();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98d8007d30ed178a',t:'MTc2MDI4NjgzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
