@@ -3,499 +3,1172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopEasy - Order with Location</title>
+    <title>Mana Delivery - Your Local Service Partner</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             box-sizing: border-box;
         }
+        
+        .carousel-container {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            flex-shrink: 0;
+        }
+        
+        .grid-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .grid-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 54, 24, 0.15);
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item.active {
+            color: #283618;
+            background-color: rgba(254, 250, 224, 0.8);
+        }
+        
         .product-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s ease;
         }
+        
         .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            transform: scale(1.02);
         }
-        .whatsapp-btn {
-            background: linear-gradient(135deg, #25D366, #128C7E);
-            transition: all 0.3s ease;
+        
+        .wishlist-btn {
+            transition: color 0.2s ease;
         }
-        .whatsapp-btn:hover {
-            background: linear-gradient(135deg, #128C7E, #075E54);
-            transform: scale(1.05);
+        
+        .wishlist-btn.active {
+            color: #dc2626;
         }
-        .location-btn {
-            transition: all 0.3s ease;
-        }
-        .location-btn.active {
-            background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #283618;
             color: white;
-        }
-        .form-container {
-            backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.95);
-        }
-        .location-status {
-            padding: 10px;
+            padding: 12px 20px;
             border-radius: 8px;
-            margin: 10px 0;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
         }
-        .location-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .location-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .location-loading {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
+        
+        .toast.show {
+            transform: translateX(0);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+<body class="bg-[#FEFAE0] min-h-full">
     <!-- Header -->
-    <header class="bg-white shadow-lg">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-indigo-600">🛍️ ShopEasy</h1>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">Service Location:</span>
-                    <button onclick="selectServiceLocation('khanapur')" class="location-btn px-4 py-2 rounded-lg border-2 border-indigo-200 text-indigo-600 font-medium" id="khanapur-btn">
-                        📍 Khanapur
-                    </button>
-                    <button onclick="selectServiceLocation('nirmal')" class="location-btn px-4 py-2 rounded-lg border-2 border-indigo-200 text-indigo-600 font-medium" id="nirmal-btn">
-                        📍 Nirmal
-                    </button>
-                </div>
+    <header class="bg-[#606C38] text-white p-4 sticky top-0 z-50">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold">Mana Delivery</h1>
+            <div class="flex gap-3">
+                <a href="tel:7799086877" class="bg-[#283618] p-2 rounded-full hover:bg-opacity-80 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                </a>
+                <a href="https://wa.me/917799086877" target="_blank" rel="noopener noreferrer" class="bg-green-600 p-2 rounded-full hover:bg-green-700 transition-colors">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893A11.821 11.821 0 0020.465 3.516"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </header>
 
-    <!-- Location Status -->
-    <div class="bg-indigo-600 text-white py-3">
-        <div class="container mx-auto px-4 text-center">
-            <p id="service-location-status" class="text-lg font-medium">Please select your service location to get started</p>
-        </div>
-    </div>
-
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Products Grid -->
-        <section class="mb-12">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Featured Products</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Product 1 -->
-                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
-                    <div class="h-48 bg-gradient-to-br from-pink-200 to-pink-300 flex items-center justify-center">
-                        <span class="text-6xl">👕</span>
+    <main class="pb-20">
+        <!-- Home Page -->
+        <div id="home-page" class="page">
+            <!-- Image Carousel -->
+            <div class="carousel-container h-48 bg-gray-200 rounded-lg mx-4 mt-4 overflow-hidden">
+                <div class="carousel-track h-full" id="carousel-track">
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=400&fit=crop" alt="Fresh Groceries" class="w-full h-full object-cover rounded-lg">
                     </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Premium T-Shirt</h3>
-                        <p class="text-gray-600 mb-4">Comfortable cotton t-shirt available in multiple colors</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-bold text-indigo-600">₹599</span>
-                            <button onclick="openOrderForm('Premium T-Shirt', '599')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
-                                📝 Order Now
-                            </button>
-                        </div>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&h=400&fit=crop" alt="Fast Delivery" class="w-full h-full object-cover rounded-lg">
                     </div>
-                </div>
-
-                <!-- Product 2 -->
-                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
-                    <div class="h-48 bg-gradient-to-br from-blue-200 to-blue-300 flex items-center justify-center">
-                        <span class="text-6xl">👖</span>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop" alt="Local Services" class="w-full h-full object-cover rounded-lg">
                     </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Denim Jeans</h3>
-                        <p class="text-gray-600 mb-4">High-quality denim jeans with perfect fit</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-bold text-indigo-600">₹1,299</span>
-                            <button onclick="openOrderForm('Denim Jeans', '1299')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
-                                📝 Order Now
-                            </button>
-                        </div>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=400&fit=crop" alt="Transportation" class="w-full h-full object-cover rounded-lg">
                     </div>
-                </div>
-
-                <!-- Product 3 -->
-                <div class="product-card bg-white rounded-xl shadow-md overflow-hidden">
-                    <div class="h-48 bg-gradient-to-br from-green-200 to-green-300 flex items-center justify-center">
-                        <span class="text-6xl">👟</span>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Sports Shoes</h3>
-                        <p class="text-gray-600 mb-4">Comfortable sports shoes for daily activities</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-2xl font-bold text-indigo-600">₹2,499</span>
-                            <button onclick="openOrderForm('Sports Shoes', '2499')" class="whatsapp-btn text-white px-4 py-2 rounded-lg font-medium">
-                                📝 Order Now
-                            </button>
-                        </div>
+                    <div class="carousel-slide">
+                        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=400&fit=crop" alt="Business Support" class="w-full h-full object-cover rounded-lg">
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
 
-    <!-- Order Form Modal -->
-    <div id="orderModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="form-container rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-2xl font-bold text-gray-800">📝 Order Details</h3>
-                    <button onclick="closeOrderForm()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <!-- Service Categories Grid -->
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Our Services</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('store')">
+                        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=150&fit=crop" alt="Store" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Store</h3>
+                        <p class="text-sm text-gray-600">Groceries & Essentials</p>
+                    </div>
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('transport')">
+                        <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=150&fit=crop" alt="Transport" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Transport</h3>
+                        <p class="text-sm text-gray-600">Local & Tours</p>
+                    </div>
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('services')">
+                        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=150&fit=crop" alt="Services" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Services</h3>
+                        <p class="text-sm text-gray-600">Professional Help</p>
+                    </div>
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('events')">
+                        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=200&h=150&fit=crop" alt="Events" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Events</h3>
+                        <p class="text-sm text-gray-600">Event Management</p>
+                    </div>
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('business')">
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=150&fit=crop" alt="Business" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Business</h3>
+                        <p class="text-sm text-gray-600">Support Services</p>
+                    </div>
+                    <div class="grid-card bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="showPage('join')">
+                        <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=200&h=150&fit=crop" alt="Join Us" class="w-full h-24 object-cover rounded-lg mb-3">
+                        <h3 class="font-semibold text-[#283618]">Join Us</h3>
+                        <p class="text-sm text-gray-600">Partner With Us</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Banner -->
+            <div class="mx-4 my-6">
+                <img src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=800&h=200&fit=crop" alt="Special Offers" class="w-full h-32 object-cover rounded-xl">
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Quick Bookings</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-[#606C38] text-white p-4 rounded-xl cursor-pointer" onclick="quickTransport()">
+                        <h3 class="font-semibold mb-2">🚗 Quick Ride</h3>
+                        <p class="text-sm">Book local transport now</p>
+                    </div>
+                    <div class="bg-[#606C38] text-white p-4 rounded-xl cursor-pointer" onclick="quickDelivery()">
+                        <h3 class="font-semibold mb-2">📦 Quick Delivery</h3>
+                        <p class="text-sm">Send parcels instantly</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Store Page -->
+        <div id="store-page" class="page hidden">
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-[#283618]">Store</h2>
+                    <div class="flex gap-2">
+                        <button onclick="toggleWishlist()" class="p-2 bg-white rounded-full shadow-md">
+                            <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <button onclick="toggleCart()" class="p-2 bg-white rounded-full shadow-md relative">
+                            <svg class="w-5 h-5 text-[#283618]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h9m-9 0h9"/>
+                            </svg>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Product Info -->
-                <div class="bg-indigo-50 p-4 rounded-lg mb-6">
-                    <h4 class="font-bold text-indigo-800" id="modal-product-name">Product Name</h4>
-                    <p class="text-indigo-600 text-xl font-bold" id="modal-product-price">₹0</p>
+                <!-- Categories -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-[#283618] mb-3">Categories</h3>
+                    <div class="flex gap-3 overflow-x-auto pb-2">
+                        <button onclick="filterProducts('all')" class="category-btn active bg-[#606C38] text-white px-4 py-2 rounded-full whitespace-nowrap">All</button>
+                        <button onclick="filterProducts('vegetables')" class="category-btn bg-white text-[#283618] px-4 py-2 rounded-full whitespace-nowrap border">Vegetables</button>
+                        <button onclick="filterProducts('fruits')" class="category-btn bg-white text-[#283618] px-4 py-2 rounded-full whitespace-nowrap border">Fruits</button>
+                        <button onclick="filterProducts('dairy')" class="category-btn bg-white text-[#283618] px-4 py-2 rounded-full whitespace-nowrap border">Dairy</button>
+                        <button onclick="filterProducts('snacks')" class="category-btn bg-white text-[#283618] px-4 py-2 rounded-full whitespace-nowrap border">Snacks</button>
+                    </div>
                 </div>
 
-                <!-- Customer Details Form -->
-                <form id="orderForm" onsubmit="submitOrder(event)">
-                    <div class="space-y-4">
-                        <!-- Name -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">👤 Full Name *</label>
-                            <input type="text" id="customerName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your full name">
-                        </div>
+                <!-- Products Grid -->
+                <div id="products-grid" class="grid grid-cols-2 gap-4">
+                    <!-- Products will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
 
-                        <!-- Phone -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">📱 Phone Number *</label>
-                            <input type="tel" id="customerPhone" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your phone number">
-                        </div>
+        <!-- Transport Page -->
+        <div id="transport-page" class="page hidden">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Transport & Tours</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookTransport('bike')">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=150&fit=crop" alt="Bike" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Bike</h3>
+                        <p class="text-sm text-gray-600">Quick rides</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookTransport('auto')">
+                        <img src="https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=200&h=150&fit=crop" alt="Auto" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Auto</h3>
+                        <p class="text-sm text-gray-600">Local travel</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookTransport('car')">
+                        <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=200&h=150&fit=crop" alt="Car" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Car</h3>
+                        <p class="text-sm text-gray-600">Comfortable rides</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookTransport('bus')">
+                        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200&h=150&fit=crop" alt="Bus" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Bus</h3>
+                        <p class="text-sm text-gray-600">Group travel</p>
+                    </div>
+                </div>
 
-                        <!-- Email -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">📧 Email</label>
-                            <input type="email" id="customerEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your email (optional)">
+                <div class="bg-white p-4 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-[#283618] mb-3">Book Your Ride</h3>
+                    <form id="transport-form" onsubmit="submitTransportBooking(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                            <input type="text" id="from-location" class="w-full p-2 border rounded-lg" placeholder="Pickup location" required>
                         </div>
-
-                        <!-- Address -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">🏠 Delivery Address *</label>
-                            <textarea id="customerAddress" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Enter your complete delivery address"></textarea>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                            <input type="text" id="to-location" class="w-full p-2 border rounded-lg" placeholder="Drop location" required>
                         </div>
-
-                        <!-- Location Info -->
-                        <div>
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                                <p class="text-blue-800 text-sm font-medium">📍 Location for Fast Delivery</p>
-                                <p class="text-blue-700 text-xs">When you click "Order via WhatsApp", we'll ask for your location permission to ensure fast and accurate delivery.</p>
-                            </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date & Time</label>
+                            <input type="datetime-local" id="travel-time" class="w-full p-2 border rounded-lg" required>
                         </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                            <input type="tel" id="contact-number" class="w-full p-2 border rounded-lg" placeholder="Your phone number" required>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-2 rounded-lg font-semibold">Book Now via WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Quantity -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">🔢 Quantity</label>
-                            <select id="quantity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
+        <!-- Services Page -->
+        <div id="services-page" class="page hidden">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Professional Services</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookService('plumber')">
+                        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=150&fit=crop" alt="Plumber" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Plumber</h3>
+                        <p class="text-sm text-gray-600">Pipe & water issues</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookService('electrician')">
+                        <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=200&h=150&fit=crop" alt="Electrician" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Electrician</h3>
+                        <p class="text-sm text-gray-600">Electrical repairs</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookService('painter')">
+                        <img src="https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=200&h=150&fit=crop" alt="Painter" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Painter</h3>
+                        <p class="text-sm text-gray-600">Home painting</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md cursor-pointer" onclick="bookService('barber')">
+                        <img src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=200&h=150&fit=crop" alt="Barber" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Barber</h3>
+                        <p class="text-sm text-gray-600">Hair & grooming</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-[#283618] mb-3">Book Service</h3>
+                    <form id="service-form" onsubmit="submitServiceBooking(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
+                            <select id="service-type" class="w-full p-2 border rounded-lg" required>
+                                <option value="">Select service</option>
+                                <option value="plumber">Plumber</option>
+                                <option value="electrician">Electrician</option>
+                                <option value="painter">Painter</option>
+                                <option value="barber">Barber</option>
+                                <option value="cleaner">House Cleaning</option>
+                                <option value="carpenter">Carpenter</option>
                             </select>
                         </div>
-
-                        <!-- Special Instructions -->
-                        <div>
-                            <label class="block text-gray-700 font-medium mb-2">📝 Special Instructions</label>
-                            <textarea id="specialInstructions" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent" placeholder="Any special requirements or notes (optional)"></textarea>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                            <input type="text" id="service-name" class="w-full p-2 border rounded-lg" placeholder="Full name" required>
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                            <input type="tel" id="service-contact" class="w-full p-2 border rounded-lg" placeholder="Phone number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                            <textarea id="service-address" class="w-full p-2 border rounded-lg" rows="2" placeholder="Your address" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date & Time</label>
+                            <input type="datetime-local" id="service-time" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea id="service-description" class="w-full p-2 border rounded-lg" rows="2" placeholder="Describe your requirement"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-2 rounded-lg font-semibold">Book Service via WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="w-full whatsapp-btn text-white px-6 py-3 rounded-lg font-medium text-lg mt-6">
-                        💬 Order via WhatsApp
+        <!-- Events Page -->
+        <div id="events-page" class="page hidden">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Event Management</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=200&h=150&fit=crop" alt="Wedding" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Wedding</h3>
+                        <p class="text-sm text-gray-600">Complete planning</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=200&h=150&fit=crop" alt="Birthday" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Birthday</h3>
+                        <p class="text-sm text-gray-600">Party planning</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=200&h=150&fit=crop" alt="Corporate" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Corporate</h3>
+                        <p class="text-sm text-gray-600">Business events</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=200&h=150&fit=crop" alt="Festival" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Festival</h3>
+                        <p class="text-sm text-gray-600">Cultural events</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-[#283618] mb-3">Plan Your Event</h3>
+                    <form id="event-form" onsubmit="submitEventBooking(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                            <select id="event-type" class="w-full p-2 border rounded-lg" required>
+                                <option value="">Select event type</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="birthday">Birthday Party</option>
+                                <option value="corporate">Corporate Event</option>
+                                <option value="festival">Festival</option>
+                                <option value="anniversary">Anniversary</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                            <input type="text" id="event-name" class="w-full p-2 border rounded-lg" placeholder="Full name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                            <input type="tel" id="event-contact" class="w-full p-2 border rounded-lg" placeholder="Phone number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+                            <input type="date" id="event-date" class="w-full p-2 border rounded-lg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Expected Guests</label>
+                            <input type="number" id="event-guests" class="w-full p-2 border rounded-lg" placeholder="Number of guests" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                            <input type="text" id="event-venue" class="w-full p-2 border rounded-lg" placeholder="Event location">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Budget Range</label>
+                            <select id="event-budget" class="w-full p-2 border rounded-lg">
+                                <option value="">Select budget</option>
+                                <option value="under-50k">Under ₹50,000</option>
+                                <option value="50k-1l">₹50,000 - ₹1,00,000</option>
+                                <option value="1l-2l">₹1,00,000 - ₹2,00,000</option>
+                                <option value="above-2l">Above ₹2,00,000</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Special Requirements</label>
+                            <textarea id="event-requirements" class="w-full p-2 border rounded-lg" rows="2" placeholder="Any special requirements"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-2 rounded-lg font-semibold">Get Event Quote via WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Page -->
+        <div id="business-page" class="page hidden">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Business Support</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=200&h=150&fit=crop" alt="Digital Marketing" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Digital Marketing</h3>
+                        <p class="text-sm text-gray-600">Online promotion</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=200&h=150&fit=crop" alt="Website Development" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Website Development</h3>
+                        <p class="text-sm text-gray-600">Web solutions</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1556740758-90de374c12ad?w=200&h=150&fit=crop" alt="Delivery Partners" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Delivery Partners</h3>
+                        <p class="text-sm text-gray-600">Logistics support</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=200&h=150&fit=crop" alt="E-commerce Support" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">E-commerce Support</h3>
+                        <p class="text-sm text-gray-600">Online store help</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-[#283618] mb-3">Business Inquiry</h3>
+                    <form id="business-form" onsubmit="submitBusinessInquiry(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Service Required</label>
+                            <select id="business-service" class="w-full p-2 border rounded-lg" required>
+                                <option value="">Select service</option>
+                                <option value="digital-marketing">Digital Marketing</option>
+                                <option value="website-development">Website Development</option>
+                                <option value="delivery-partner">Delivery Partnership</option>
+                                <option value="ecommerce-support">E-commerce Support</option>
+                                <option value="logistics">Logistics</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                            <input type="text" id="business-name" class="w-full p-2 border rounded-lg" placeholder="Your business name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                            <input type="text" id="business-contact-name" class="w-full p-2 border rounded-lg" placeholder="Your name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="business-phone" class="w-full p-2 border rounded-lg" placeholder="Contact number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="business-email" class="w-full p-2 border rounded-lg" placeholder="Email address">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Business Type</label>
+                            <select id="business-type" class="w-full p-2 border rounded-lg">
+                                <option value="">Select business type</option>
+                                <option value="restaurant">Restaurant</option>
+                                <option value="retail">Retail Store</option>
+                                <option value="service">Service Provider</option>
+                                <option value="manufacturing">Manufacturing</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                            <textarea id="business-requirements" class="w-full p-2 border rounded-lg" rows="3" placeholder="Describe your business needs"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-2 rounded-lg font-semibold">Get Business Quote via WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Join Page -->
+        <div id="join-page" class="page hidden">
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-[#283618] mb-4">Join Our Network</h2>
+                
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=200&h=150&fit=crop" alt="Vendor" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Vendor</h3>
+                        <p class="text-sm text-gray-600">Sell your products</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=150&fit=crop" alt="Driver" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Driver</h3>
+                        <p class="text-sm text-gray-600">Earn with rides</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=200&h=150&fit=crop" alt="Delivery Partner" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Delivery Partner</h3>
+                        <p class="text-sm text-gray-600">Deliver & earn</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md">
+                        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=150&fit=crop" alt="Shop Owner" class="w-full h-20 object-cover rounded-lg mb-2">
+                        <h3 class="font-semibold text-[#283618]">Shop Owner</h3>
+                        <p class="text-sm text-gray-600">List your store</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md mb-6">
+                    <h3 class="font-semibold text-[#283618] mb-3">Join as Partner</h3>
+                    <form id="join-form" onsubmit="submitJoinForm(event)">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Partner Type</label>
+                            <select id="partner-type" class="w-full p-2 border rounded-lg" required>
+                                <option value="">Select partner type</option>
+                                <option value="vendor">Vendor</option>
+                                <option value="driver">Driver</option>
+                                <option value="delivery-partner">Delivery Partner</option>
+                                <option value="shop-owner">Shop Owner</option>
+                                <option value="service-provider">Service Provider</option>
+                                <option value="dealership">Dealership</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="partner-name" class="w-full p-2 border rounded-lg" placeholder="Your full name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" id="partner-phone" class="w-full p-2 border rounded-lg" placeholder="Contact number" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" id="partner-email" class="w-full p-2 border rounded-lg" placeholder="Email address">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Business/Service Name</label>
+                            <input type="text" id="partner-business" class="w-full p-2 border rounded-lg" placeholder="Business or service name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Experience</label>
+                            <select id="partner-experience" class="w-full p-2 border rounded-lg">
+                                <option value="">Select experience</option>
+                                <option value="0-1">0-1 years</option>
+                                <option value="1-3">1-3 years</option>
+                                <option value="3-5">3-5 years</option>
+                                <option value="5+">5+ years</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <input type="text" id="partner-location" class="w-full p-2 border rounded-lg" placeholder="Your location/area">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Additional Details</label>
+                            <textarea id="partner-details" class="w-full p-2 border rounded-lg" rows="2" placeholder="Tell us more about yourself"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-2 rounded-lg font-semibold">Apply via WhatsApp</button>
+                    </form>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-[#283618] mb-3">About Mana Delivery</h3>
+                    <p class="text-gray-600 mb-3">Mana Delivery is your local service partner, connecting customers with quality services and products in their neighborhood. We believe in supporting local businesses and creating opportunities for everyone.</p>
+                    <h4 class="font-semibold text-[#283618] mb-2">Our Mission</h4>
+                    <p class="text-gray-600 mb-3">To make local services accessible, reliable, and convenient for everyone while empowering local businesses and service providers.</p>
+                    <h4 class="font-semibold text-[#283618] mb-2">Why Partner With Us?</h4>
+                    <ul class="text-gray-600 space-y-1">
+                        <li>• Reach more customers in your area</li>
+                        <li>• Flexible working hours</li>
+                        <li>• Competitive earnings</li>
+                        <li>• Marketing support</li>
+                        <li>• Easy-to-use platform</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl max-h-[80%] overflow-y-auto">
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-[#283618]">Your Cart</h3>
+                    <button onclick="toggleCart()" class="text-gray-500">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
                     </button>
-                </form>
+                </div>
+                
+                <div id="cart-items" class="mb-4">
+                    <!-- Cart items will be populated here -->
+                </div>
+                
+                <div class="border-t pt-4">
+                    <div class="bg-yellow-100 p-3 rounded-lg mb-4">
+                        <p class="text-sm text-yellow-800 font-medium">📍 Please turn on location in your mobile for accurate delivery</p>
+                    </div>
+                    
+                    <form id="checkout-form" onsubmit="submitOrder(event)">
+                        <h4 class="font-semibold text-[#283618] mb-3">Customer Details</h4>
+                        <div class="mb-3">
+                            <input type="text" id="customer-name" class="w-full p-2 border rounded-lg" placeholder="Your name" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" id="customer-phone" class="w-full p-2 border rounded-lg" placeholder="Phone number" required>
+                        </div>
+                        <div class="mb-3">
+                            <textarea id="customer-address" class="w-full p-2 border rounded-lg" rows="2" placeholder="Delivery address" required></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-[#606C38] text-white py-3 rounded-lg font-semibold">Order via WhatsApp</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <h3 class="text-xl font-bold mb-4">ShopEasy</h3>
-            <p class="text-gray-400 mb-4">Your trusted local shopping partner</p>
-            <div class="flex justify-center space-x-8">
-                <div>
-                    <h4 class="font-semibold mb-2">📍 Khanapur</h4>
-                    <p class="text-gray-400">WhatsApp: 7799086877</p>
-                </div>
-                <div>
-                    <h4 class="font-semibold mb-2">📍 Nirmal</h4>
-                    <p class="text-gray-400">WhatsApp: 7993477015</p>
-                </div>
-            </div>
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="flex justify-around py-2">
+            <button onclick="showPage('home')" class="nav-item flex flex-col items-center p-2 active">
+                <svg class="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+                </svg>
+                <span class="text-xs">Home</span>
+            </button>
+            <button onclick="showPage('store')" class="nav-item flex flex-col items-center p-2">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+                <span class="text-xs">Store</span>
+            </button>
+            <button onclick="showPage('transport')" class="nav-item flex flex-col items-center p-2">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                </svg>
+                <span class="text-xs">Transport</span>
+            </button>
+            <button onclick="showPage('services')" class="nav-item flex flex-col items-center p-2">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs">Services</span>
+            </button>
+            <button onclick="showPage('join')" class="nav-item flex flex-col items-center p-2">
+                <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <span class="text-xs">Join</span>
+            </button>
         </div>
-    </footer>
+    </nav>
 
     <script>
-        let selectedServiceLocation = '';
-        let currentProduct = {};
-        let userLocation = {};
-        
-        let whatsappNumbers = {
-            'khanapur': '7799086877',
-            'nirmal': '7993477015'
-        };
+        // Global variables
+        let currentSlide = 0;
+        let cart = [];
+        let wishlist = [];
+        let products = [
+            {id: 1, name: 'Fresh Tomatoes', category: 'vegetables', image: 'https://images.unsplash.com/photo-1546470427-e5d491d121b4?w=200&h=200&fit=crop'},
+            {id: 2, name: 'Bananas', category: 'fruits', image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=200&h=200&fit=crop'},
+            {id: 3, name: 'Fresh Milk', category: 'dairy', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&h=200&fit=crop'},
+            {id: 4, name: 'Potato Chips', category: 'snacks', image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=200&h=200&fit=crop'},
+            {id: 5, name: 'Onions', category: 'vegetables', image: 'https://images.unsplash.com/photo-1508747703725-719777637510?w=200&h=200&fit=crop'},
+            {id: 6, name: 'Apples', category: 'fruits', image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=200&h=200&fit=crop'},
+            {id: 7, name: 'Cheese', category: 'dairy', image: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=200&h=200&fit=crop'},
+            {id: 8, name: 'Cookies', category: 'snacks', image: 'https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=200&h=200&fit=crop'}
+        ];
 
-        function selectServiceLocation(location) {
-            selectedServiceLocation = location;
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            startCarousel();
+            renderProducts();
+            updateCartCount();
+        });
+
+        // Carousel functionality
+        function startCarousel() {
+            const track = document.getElementById('carousel-track');
+            const slides = track.children.length;
             
-            // Update button styles
-            document.querySelectorAll('.location-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(location + '-btn').classList.add('active');
-            
-            // Update status message
-            const locationName = location.charAt(0).toUpperCase() + location.slice(1);
-            document.getElementById('service-location-status').textContent = `📍 Service Location: ${locationName} | WhatsApp: ${whatsappNumbers[location]}`;
+            setInterval(() => {
+                currentSlide = (currentSlide + 1) % slides;
+                track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }, 3000);
         }
 
-        function openOrderForm(productName, price) {
-            if (!selectedServiceLocation) {
-                alert('Please select your service location first!');
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId + '-page').classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Store functionality
+        function renderProducts(category = 'all') {
+            const grid = document.getElementById('products-grid');
+            const filteredProducts = category === 'all' ? products : products.filter(p => p.category === category);
+            
+            grid.innerHTML = filteredProducts.map(product => `
+                <div class="product-card bg-white p-3 rounded-xl shadow-md">
+                    <img src="${product.image}" alt="${product.name}" class="w-full h-24 object-cover rounded-lg mb-2">
+                    <h4 class="font-semibold text-[#283618] text-sm">${product.name}</h4>
+                    <p class="text-[#606C38] font-bold text-sm mb-2">Today's Price</p>
+                    <div class="flex items-center justify-between">
+                        <button onclick="toggleWishlistItem(${product.id})" class="wishlist-btn p-1">
+                            <svg class="w-4 h-4" fill="${wishlist.includes(product.id) ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                            </svg>
+                        </button>
+                        <button onclick="addToCart(${product.id})" class="bg-[#606C38] text-white px-3 py-1 rounded-lg text-sm">Add</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterProducts(category) {
+            renderProducts(category);
+            
+            // Update category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#606C38]', 'text-white');
+                btn.classList.add('bg-white', 'text-[#283618]', 'border');
+            });
+            
+            event.target.classList.remove('bg-white', 'text-[#283618]', 'border');
+            event.target.classList.add('active', 'bg-[#606C38]', 'text-white');
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({...product, quantity: 1});
+            }
+            
+            updateCartCount();
+            showToast('Added to cart!');
+        }
+
+        function toggleWishlistItem(productId) {
+            if (wishlist.includes(productId)) {
+                wishlist = wishlist.filter(id => id !== productId);
+                showToast('Removed from wishlist');
+            } else {
+                wishlist.push(productId);
+                showToast('Added to wishlist');
+            }
+            renderProducts();
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            document.getElementById('cart-count').textContent = count;
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            if (modal.classList.contains('hidden')) {
+                renderCartItems();
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cart-items');
+            
+            if (cart.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Your cart is empty</p>';
                 return;
             }
             
-            currentProduct = { name: productName, price: price };
-            document.getElementById('modal-product-name').textContent = productName;
-            document.getElementById('modal-product-price').textContent = `₹${price}`;
-            document.getElementById('orderModal').classList.remove('hidden');
-            
-            // Reset form
-            document.getElementById('orderForm').reset();
-            document.getElementById('locationDisplay').value = '';
-            document.getElementById('latitudeDisplay').value = '';
-            document.getElementById('longitudeDisplay').value = '';
-            document.getElementById('locationStatus').classList.add('hidden');
-            userLocation = {};
+            container.innerHTML = cart.map(item => `
+                <div class="flex items-center justify-between p-3 border-b">
+                    <div class="flex items-center gap-3">
+                        <img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded">
+                        <div>
+                            <h4 class="font-semibold text-sm">${item.name}</h4>
+                            <p class="text-[#606C38] text-sm">Today's Price</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">-</button>
+                        <span class="w-8 text-center">${item.quantity}</span>
+                        <button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 bg-[#606C38] text-white rounded-full flex items-center justify-center">+</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        function closeOrderForm() {
-            document.getElementById('orderModal').classList.add('hidden');
+        function updateQuantity(productId, change) {
+            const item = cart.find(item => item.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    cart = cart.filter(item => item.id !== productId);
+                }
+                updateCartCount();
+                renderCartItems();
+            }
         }
 
+        // Location and WhatsApp functionality
+        function getCurrentLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('Geolocation not supported');
+                    return;
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        });
+                    },
+                    error => {
+                        reject('Location access denied');
+                    }
+                );
+            });
+        }
 
-
-        function submitOrder(event) {
+        async function submitOrder(event) {
             event.preventDefault();
             
-            // Get form data first
-            const name = document.getElementById('customerName').value;
-            const phone = document.getElementById('customerPhone').value;
-            const email = document.getElementById('customerEmail').value;
-            const address = document.getElementById('customerAddress').value;
-            const quantity = document.getElementById('quantity').value;
-            const instructions = document.getElementById('specialInstructions').value;
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            const address = document.getElementById('customer-address').value;
             
-            // Calculate total price
-            const totalPrice = currentProduct.price * quantity;
-            
-            // Now get location and then send to WhatsApp
-            getCurrentLocationAndSendOrder(name, phone, email, address, quantity, instructions, totalPrice);
-        }
-
-        function getCurrentLocationAndSendOrder(name, phone, email, address, quantity, instructions, totalPrice) {
-            // Show loading message
-            const submitBtn = document.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '📍 Getting Location...';
-            submitBtn.disabled = true;
-
-            if (!navigator.geolocation) {
-                console.log('Geolocation not supported');
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                
-                const continueWithoutLocation = confirm(
-                    'Your browser does not support location services.\n\n' +
-                    'Do you want to continue with the order anyway?'
-                );
-                
-                if (continueWithoutLocation) {
-                    sendOrderToWhatsApp(name, phone, email, address, quantity, instructions, totalPrice, null);
-                }
-                return;
-            }
-
-            console.log('Starting location capture...');
-
-            // Try to get location with high accuracy first
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    console.log('Location captured successfully:', position.coords);
-                    const locationData = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
-                    
-                    // Reset button
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    
-                    sendOrderToWhatsApp(name, phone, email, address, quantity, instructions, totalPrice, locationData);
-                },
-                function(error) {
-                    console.log('High accuracy failed, trying low accuracy:', error);
-                    
-                    // If high accuracy fails, try with lower accuracy
-                    navigator.geolocation.getCurrentPosition(
-                        function(position) {
-                            console.log('Low accuracy location captured:', position.coords);
-                            const locationData = {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy
-                            };
-                            
-                            // Reset button
-                            submitBtn.textContent = originalText;
-                            submitBtn.disabled = false;
-                            
-                            sendOrderToWhatsApp(name, phone, email, address, quantity, instructions, totalPrice, locationData);
-                        },
-                        function(error) {
-                            console.log('Location capture failed completely:', error);
-                            
-                            // Reset button
-                            submitBtn.textContent = originalText;
-                            submitBtn.disabled = false;
-                            
-                            let errorMessage = 'Unable to get your location.\n\n';
-                            
-                            switch(error.code) {
-                                case error.PERMISSION_DENIED:
-                                    errorMessage += 'Location access was denied. Please enable location permissions and try again.\n\n';
-                                    break;
-                                case error.POSITION_UNAVAILABLE:
-                                    errorMessage += 'Location information is unavailable. Please check your GPS settings.\n\n';
-                                    break;
-                                case error.TIMEOUT:
-                                    errorMessage += 'Location request timed out. Please try again.\n\n';
-                                    break;
-                                default:
-                                    errorMessage += 'An unknown error occurred.\n\n';
-                                    break;
-                            }
-                            
-                            errorMessage += 'Do you want to continue with the order anyway?';
-                            
-                            const continueWithoutLocation = confirm(errorMessage);
-                            
-                            if (continueWithoutLocation) {
-                                sendOrderToWhatsApp(name, phone, email, address, quantity, instructions, totalPrice, null);
-                            }
-                        },
-                        {
-                            enableHighAccuracy: false,
-                            timeout: 15000,
-                            maximumAge: 300000
-                        }
-                    );
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
-                }
-            );
-        }
-
-        function sendOrderToWhatsApp(name, phone, email, address, quantity, instructions, totalPrice, locationData) {
-            console.log('Preparing WhatsApp message...');
-            console.log('Selected service location:', selectedServiceLocation);
-            console.log('Location data:', locationData);
-            
-            // Build WhatsApp message
-            let message = `🛍️ *NEW ORDER*\n\n`;
-            message += `📦 *Product:* ${currentProduct.name}\n`;
-            message += `💰 *Price:* ₹${currentProduct.price} x ${quantity} = ₹${totalPrice}\n\n`;
-            
-            message += `👤 *Customer Details:*\n`;
-            message += `Name: ${name}\n`;
-            message += `Phone: ${phone}\n`;
-            if (email) message += `Email: ${email}\n`;
-            message += `\n🏠 *Delivery Address:*\n${address}\n\n`;
-            
-            // Add location if available
-            if (locationData && locationData.latitude && locationData.longitude) {
-                message += `📍 *CUSTOMER LIVE LOCATION:*\n`;
-                message += `🎯 Latitude: ${locationData.latitude.toFixed(6)}\n`;
-                message += `🎯 Longitude: ${locationData.longitude.toFixed(6)}\n`;
-                message += `🗺️ Google Maps: https://maps.google.com/?q=${locationData.latitude},${locationData.longitude}\n`;
-                message += `📏 Location Accuracy: ${Math.round(locationData.accuracy)}m\n\n`;
-            } else {
-                message += `📍 *Location:* Not available (customer may need to provide directions)\n\n`;
-            }
-            
-            message += `🏪 *Service Location:* ${selectedServiceLocation.charAt(0).toUpperCase() + selectedServiceLocation.slice(1)}\n\n`;
-            
-            if (instructions) {
-                message += `📝 *Special Instructions:*\n${instructions}\n\n`;
-            }
-            
-            message += `⏰ *Order Time:* ${new Date().toLocaleString()}\n\n`;
-            message += `Please confirm this order and provide delivery timeline.`;
-            
-            // Get phone number for selected service location
-            const phoneNumber = whatsappNumbers[selectedServiceLocation];
-            console.log('WhatsApp phone number:', phoneNumber);
-            
-            if (!phoneNumber) {
-                alert('Error: No phone number found for selected service location. Please try again.');
-                return;
-            }
-            
-            // Create WhatsApp URL
-            const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${encodeURIComponent(message)}`;
-            console.log('WhatsApp URL:', whatsappUrl);
-            
-            // Try to open WhatsApp
             try {
-                const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                const location = await getCurrentLocation();
                 
-                if (!newWindow) {
-                    // If popup was blocked, show alternative
-                    alert('Popup blocked! Please allow popups for this site or copy this link:\n\n' + whatsappUrl);
-                } else {
-                    console.log('WhatsApp opened successfully');
-                    
-                    // Close modal and show success after a short delay
-                    setTimeout(() => {
-                        closeOrderForm();
-                        alert('Order details sent to WhatsApp! Our team will contact you shortly.');
-                    }, 1000);
-                }
+                const orderDetails = cart.map(item => `${item.name} x${item.quantity}`).join('\n');
+                
+                const message = `🛒 *New Order from Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Name: ${name}\n` +
+                    `Phone: ${phone}\n` +
+                    `Address: ${address}\n\n` +
+                    `📦 *Order Items:*\n${orderDetails}\n\n` +
+                    `📍 *Location:*\n` +
+                    `Latitude: ${location.latitude}\n` +
+                    `Longitude: ${location.longitude}\n` +
+                    `Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}\n\n` +
+                    `Please confirm the order and delivery time.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                // Clear cart after order
+                cart = [];
+                updateCartCount();
+                toggleCart();
+                showToast('Order sent via WhatsApp!');
+                
             } catch (error) {
-                console.error('Error opening WhatsApp:', error);
-                alert('Error opening WhatsApp. Please try again or contact us directly at: ' + phoneNumber);
+                const message = `🛒 *New Order from Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Name: ${name}\n` +
+                    `Phone: ${phone}\n` +
+                    `Address: ${address}\n\n` +
+                    `📦 *Order Items:*\n${orderDetails}\n\n` +
+                    `⚠️ *Location:* Could not access location. Please share your location manually.\n\n` +
+                    `Please confirm the order and delivery time.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                cart = [];
+                updateCartCount();
+                toggleCart();
+                showToast('Order sent! Please share location manually.');
             }
         }
 
-        // Auto-select first location on page load
-        window.addEventListener('load', function() {
-            selectServiceLocation('khanapur');
-        });
-
-        // Close modal when clicking outside
-        document.getElementById('orderModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeOrderForm();
+        // Transport booking
+        async function submitTransportBooking(event) {
+            event.preventDefault();
+            
+            const from = document.getElementById('from-location').value;
+            const to = document.getElementById('to-location').value;
+            const time = document.getElementById('travel-time').value;
+            const contact = document.getElementById('contact-number').value;
+            
+            try {
+                const location = await getCurrentLocation();
+                
+                const message = `🚗 *Transport Booking - Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Contact: ${contact}\n\n` +
+                    `🛣️ *Trip Details:*\n` +
+                    `From: ${from}\n` +
+                    `To: ${to}\n` +
+                    `Date & Time: ${time}\n\n` +
+                    `📍 *Current Location:*\n` +
+                    `Latitude: ${location.latitude}\n` +
+                    `Longitude: ${location.longitude}\n` +
+                    `Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}\n\n` +
+                    `Please confirm availability and fare.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                document.getElementById('transport-form').reset();
+                showToast('Booking request sent!');
+                
+            } catch (error) {
+                const message = `🚗 *Transport Booking - Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Contact: ${contact}\n\n` +
+                    `🛣️ *Trip Details:*\n` +
+                    `From: ${from}\n` +
+                    `To: ${to}\n` +
+                    `Date & Time: ${time}\n\n` +
+                    `⚠️ *Location:* Could not access location\n\n` +
+                    `Please confirm availability and fare.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                document.getElementById('transport-form').reset();
+                showToast('Booking sent! Please share location manually.');
             }
-        });
+        }
+
+        // Service booking
+        async function submitServiceBooking(event) {
+            event.preventDefault();
+            
+            const serviceType = document.getElementById('service-type').value;
+            const name = document.getElementById('service-name').value;
+            const contact = document.getElementById('service-contact').value;
+            const address = document.getElementById('service-address').value;
+            const time = document.getElementById('service-time').value;
+            const description = document.getElementById('service-description').value;
+            
+            try {
+                const location = await getCurrentLocation();
+                
+                const message = `🔧 *Service Booking - Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Name: ${name}\n` +
+                    `Contact: ${contact}\n` +
+                    `Address: ${address}\n\n` +
+                    `🛠️ *Service Details:*\n` +
+                    `Service: ${serviceType}\n` +
+                    `Preferred Time: ${time}\n` +
+                    `Description: ${description}\n\n` +
+                    `📍 *Location:*\n` +
+                    `Latitude: ${location.latitude}\n` +
+                    `Longitude: ${location.longitude}\n` +
+                    `Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}\n\n` +
+                    `Please confirm availability and charges.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                document.getElementById('service-form').reset();
+                showToast('Service request sent!');
+                
+            } catch (error) {
+                const message = `🔧 *Service Booking - Mana Delivery*\n\n` +
+                    `👤 *Customer Details:*\n` +
+                    `Name: ${name}\n` +
+                    `Contact: ${contact}\n` +
+                    `Address: ${address}\n\n` +
+                    `🛠️ *Service Details:*\n` +
+                    `Service: ${serviceType}\n` +
+                    `Preferred Time: ${time}\n` +
+                    `Description: ${description}\n\n` +
+                    `⚠️ *Location:* Could not access location\n\n` +
+                    `Please confirm availability and charges.`;
+                
+                const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                
+                document.getElementById('service-form').reset();
+                showToast('Service request sent!');
+            }
+        }
+
+        // Event booking
+        function submitEventBooking(event) {
+            event.preventDefault();
+            
+            const eventType = document.getElementById('event-type').value;
+            const name = document.getElementById('event-name').value;
+            const contact = document.getElementById('event-contact').value;
+            const date = document.getElementById('event-date').value;
+            const guests = document.getElementById('event-guests').value;
+            const venue = document.getElementById('event-venue').value;
+            const budget = document.getElementById('event-budget').value;
+            const requirements = document.getElementById('event-requirements').value;
+            
+            const message = `🎉 *Event Planning - Mana Delivery*\n\n` +
+                `👤 *Customer Details:*\n` +
+                `Name: ${name}\n` +
+                `Contact: ${contact}\n\n` +
+                `🎊 *Event Details:*\n` +
+                `Event Type: ${eventType}\n` +
+                `Date: ${date}\n` +
+                `Expected Guests: ${guests}\n` +
+                `Venue: ${venue || 'To be decided'}\n` +
+                `Budget: ${budget || 'To be discussed'}\n` +
+                `Requirements: ${requirements || 'Standard planning'}\n\n` +
+                `Please provide a detailed quote and planning options.`;
+            
+            const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            document.getElementById('event-form').reset();
+            showToast('Event inquiry sent!');
+        }
+
+        // Business inquiry
+        function submitBusinessInquiry(event) {
+            event.preventDefault();
+            
+            const service = document.getElementById('business-service').value;
+            const businessName = document.getElementById('business-name').value;
+            const contactName = document.getElementById('business-contact-name').value;
+            const phone = document.getElementById('business-phone').value;
+            const email = document.getElementById('business-email').value;
+            const businessType = document.getElementById('business-type').value;
+            const requirements = document.getElementById('business-requirements').value;
+            
+            const message = `💼 *Business Support Inquiry - Mana Delivery*\n\n` +
+                `🏢 *Business Details:*\n` +
+                `Business Name: ${businessName}\n` +
+                `Contact Person: ${contactName}\n` +
+                `Phone: ${phone}\n` +
+                `Email: ${email || 'Not provided'}\n` +
+                `Business Type: ${businessType || 'Not specified'}\n\n` +
+                `📋 *Service Required:*\n` +
+                `Service: ${service}\n` +
+                `Requirements: ${requirements || 'Basic consultation needed'}\n\n` +
+                `Please provide service details and pricing information.`;
+            
+            const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            document.getElementById('business-form').reset();
+            showToast('Business inquiry sent!');
+        }
+
+        // Join form
+        function submitJoinForm(event) {
+            event.preventDefault();
+            
+            const partnerType = document.getElementById('partner-type').value;
+            const name = document.getElementById('partner-name').value;
+            const phone = document.getElementById('partner-phone').value;
+            const email = document.getElementById('partner-email').value;
+            const business = document.getElementById('partner-business').value;
+            const experience = document.getElementById('partner-experience').value;
+            const location = document.getElementById('partner-location').value;
+            const details = document.getElementById('partner-details').value;
+            
+            const message = `🤝 *Partnership Application - Mana Delivery*\n\n` +
+                `👤 *Applicant Details:*\n` +
+                `Name: ${name}\n` +
+                `Phone: ${phone}\n` +
+                `Email: ${email || 'Not provided'}\n` +
+                `Location: ${location || 'Not specified'}\n\n` +
+                `💼 *Partnership Details:*\n` +
+                `Partner Type: ${partnerType}\n` +
+                `Business/Service: ${business || 'Individual'}\n` +
+                `Experience: ${experience || 'Not specified'}\n\n` +
+                `📝 *Additional Information:*\n` +
+                `${details || 'No additional details provided'}\n\n` +
+                `Please review the application and provide next steps.`;
+            
+            const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            document.getElementById('join-form').reset();
+            showToast('Application submitted!');
+        }
+
+        // Quick actions
+        function quickTransport() {
+            showPage('transport');
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector('[onclick="showPage(\'transport\')"]').classList.add('active');
+        }
+
+        function quickDelivery() {
+            const message = `📦 *Quick Delivery Request - Mana Delivery*\n\n` +
+                `I need a quick parcel delivery service. Please contact me for details.\n\n` +
+                `Please call me to discuss pickup and delivery details.`;
+            
+            const whatsappUrl = `https://wa.me/917799086877?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        }
+
+        // Utility functions
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function bookTransport(type) {
+            document.getElementById('service-type').value = type;
+            showToast(`Selected ${type} transport`);
+        }
+
+        function bookService(type) {
+            document.getElementById('service-type').value = type;
+            showToast(`Selected ${type} service`);
+        }
+
+        function toggleWishlist() {
+            showToast('Wishlist feature - coming soon!');
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98d82b9036937f89',t:'MTc2MDI4ODYwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98e46a0791303c4f',t:'MTc2MDQxNjk4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
