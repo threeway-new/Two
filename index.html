@@ -85,14 +85,29 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            z-index: 100;
+            z-index: 1000;
             backdrop-filter: blur(5px);
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            pointer-events: none;
         }
         
         .modal.active {
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+        
+        .modal.closing {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
         }
         
         .modal.active ~ * {
@@ -113,7 +128,7 @@
             border-radius: 16px;
             text-align: center;
             max-width: 320px;
-            margin: 16px;
+            width: 100%;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
             animation: popupSlide 0.3s ease-out;
         }
@@ -159,7 +174,7 @@
             border-radius: 20px;
             text-align: center;
             max-width: 400px;
-            margin: 16px;
+            width: 100%;
             box-shadow: 0 25px 50px rgba(0,0,0,0.4);
             animation: welcomeSlide 0.6s ease-out;
             position: relative;
@@ -200,7 +215,7 @@
             border-radius: 16px;
             text-align: center;
             max-width: 350px;
-            margin: 16px;
+            width: 100%;
             box-shadow: 0 20px 40px rgba(0,0,0,0.15);
             animation: infoSlide 0.4s ease-out;
             border-top: 4px solid #606C38;
@@ -251,15 +266,7 @@
             transform: translateY(-2px);
         }
 
-        /* Floating Buttons Animation */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-        }
 
-        .floating-animation {
-            animation: float 3s ease-in-out infinite;
-        }
 
         /* Loading Animation */
         .loading-dots {
@@ -337,6 +344,14 @@
                 </div>
             </div>
             <div class="flex gap-2">
+                <button onclick="toggleWishlist()" class="relative bg-pink-500 text-white p-2 rounded-full hover:bg-pink-600 transition-colors" style="display: none;" id="headerWishlistBtn">
+                    <i class="fas fa-heart text-lg"></i>
+                    <span class="absolute -top-1 -right-1 bg-white text-pink-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md" id="headerWishlistCount">0</span>
+                </button>
+                <button onclick="toggleCart()" class="relative bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors" style="display: none;" id="headerCartBtn">
+                    <i class="fas fa-shopping-cart text-lg"></i>
+                    <span class="absolute -top-1 -right-1 bg-white text-green-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md" id="headerCartCount">0</span>
+                </button>
                 <button onclick="requestLocationPermission()" id="locationBtn" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
                     <i class="fas fa-crosshairs text-lg"></i>
                 </button>
@@ -489,6 +504,28 @@
                         </div>
                         <i class="fas fa-arrow-right"></i>
                     </button>
+                </div>
+            </div>
+
+            <!-- Special Offers Banner Carousel -->
+            <div class="p-4">
+                <div class="carousel-container rounded-xl overflow-hidden shadow-lg mb-6">
+                    <div class="carousel-track" id="offersCarouselTrack">
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=800&h=200&fit=crop" alt="Special Offers" class="w-full h-40 object-cover">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=200&fit=crop" alt="Weekend Deals" class="w-full h-40 object-cover">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?w=800&h=200&fit=crop" alt="Service Discounts" class="w-full h-40 object-cover">
+                        </div>
+                    </div>
+                    <div class="flex justify-center py-3 space-x-2">
+                        <button class="offers-dot w-2 h-2 rounded-full bg-secondary shadow-md transition-all duration-300 hover:scale-110" onclick="goToOfferSlide(0)"></button>
+                        <button class="offers-dot w-2 h-2 rounded-full bg-gray-400 shadow-md transition-all duration-300 hover:scale-110" onclick="goToOfferSlide(1)"></button>
+                        <button class="offers-dot w-2 h-2 rounded-full bg-gray-400 shadow-md transition-all duration-300 hover:scale-110" onclick="goToOfferSlide(2)"></button>
+                    </div>
                 </div>
             </div>
 
@@ -684,6 +721,68 @@
                 </div>
             </div>
 
+            <!-- Service Gallery -->
+            <div class="p-4">
+                <h2 class="text-xl font-bold text-accent mb-4">Our Services in Action</h2>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer" onclick="showPage('servicesPage')">
+                        <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=300&h=200&fit=crop" alt="Professional Plumbing Service" class="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-2 left-2 text-white">
+                            <h3 class="font-semibold text-sm">Professional Plumbing</h3>
+                            <p class="text-xs opacity-90">Expert pipe & drainage solutions</p>
+                        </div>
+                    </div>
+                    <div class="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer" onclick="showPage('servicesPage')">
+                        <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?w=300&h=200&fit=crop" alt="Electrical Services" class="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-2 left-2 text-white">
+                            <h3 class="font-semibold text-sm">Electrical Services</h3>
+                            <p class="text-xs opacity-90">Safe wiring & repair work</p>
+                        </div>
+                    </div>
+                    <div class="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer" onclick="showPage('transportPage')">
+                        <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=300&h=200&fit=crop" alt="Transport Services" class="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-2 left-2 text-white">
+                            <h3 class="font-semibold text-sm">Transport & Tours</h3>
+                            <p class="text-xs opacity-90">Reliable local & tour services</p>
+                        </div>
+                    </div>
+                    <div class="relative rounded-xl overflow-hidden shadow-lg group cursor-pointer" onclick="showPage('storePage')">
+                        <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=200&fit=crop" alt="Fresh Groceries" class="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute bottom-2 left-2 text-white">
+                            <h3 class="font-semibold text-sm">Fresh Groceries</h3>
+                            <p class="text-xs opacity-90">Quality produce delivered fresh</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="relative rounded-lg overflow-hidden shadow-md group cursor-pointer" onclick="showPage('servicesPage')">
+                        <img src="https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=200&h=120&fit=crop" alt="Painting Services" class="w-full h-20 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        <div class="absolute bottom-1 left-1 text-white">
+                            <p class="text-xs font-semibold">Painting</p>
+                        </div>
+                    </div>
+                    <div class="relative rounded-lg overflow-hidden shadow-md group cursor-pointer" onclick="showPage('servicesPage')">
+                        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=200&h=120&fit=crop" alt="Cleaning Services" class="w-full h-20 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        <div class="absolute bottom-1 left-1 text-white">
+                            <p class="text-xs font-semibold">Cleaning</p>
+                        </div>
+                    </div>
+                    <div class="relative rounded-lg overflow-hidden shadow-md group cursor-pointer" onclick="showPage('eventsPage')">
+                        <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=200&h=120&fit=crop" alt="Event Management" class="w-full h-20 object-cover group-hover:scale-110 transition-transform duration-300">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                        <div class="absolute bottom-1 left-1 text-white">
+                            <p class="text-xs font-semibold">Events</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
 
             <!-- Need Help Section -->
@@ -707,51 +806,44 @@
 
         <!-- Store Page -->
         <div id="storePage" class="page hidden">
-            <!-- Floating Cart and Wishlist Buttons -->
-            <div class="fixed bottom-24 right-4 z-40 flex flex-col gap-4 floating-animation" id="floatingButtons" style="display: none;">
-                <button onclick="toggleWishlist()" class="group relative bg-gradient-to-r from-pink-500 to-red-500 text-white p-4 rounded-full shadow-2xl hover:shadow-pink-500/25 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 feature-highlight">
-                    <i class="fas fa-heart text-xl group-hover:animate-pulse"></i>
-                    <span class="absolute -top-2 -right-2 bg-white text-red-500 text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg border-2 border-red-100 animate-bounce" id="floatingWishlistCount">0</span>
-                    <div class="absolute inset-0 rounded-full bg-gradient-to-r from-pink-400 to-red-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                </button>
-                <button onclick="toggleCart()" class="group relative bg-gradient-to-r from-green-500 to-secondary text-white p-4 rounded-full shadow-2xl hover:shadow-green-500/25 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 feature-highlight pulse-glow">
-                    <i class="fas fa-shopping-cart text-xl group-hover:animate-bounce"></i>
-                    <span class="absolute -top-2 -right-2 bg-white text-secondary text-xs font-bold rounded-full w-7 h-7 flex items-center justify-center shadow-lg border-2 border-green-100 animate-pulse" id="floatingCartCount">0</span>
-                    <div class="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                </button>
+            <!-- Fixed Store Header -->
+            <div class="fixed top-16 left-0 right-0 bg-primary z-40 shadow-sm border-b border-gray-200">
+                <div class="p-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <button onclick="showPage('homePage')" class="text-secondary">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <h2 class="text-xl font-bold text-accent">Mana Store</h2>
+                        <div class="ml-auto flex gap-2">
+                            <button onclick="toggleWishlist()" class="text-secondary p-2 relative">
+                                <i class="fas fa-heart text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md" id="wishlistCount" style="display: none;">0</span>
+                            </button>
+                            <button onclick="toggleCart()" class="text-secondary p-2 relative">
+                                <i class="fas fa-shopping-cart text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md" id="cartCount" style="display: none;">0</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="mb-4">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search products..." 
+                                   class="w-full p-3 pl-10 pr-10 border border-secondary rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
+                                   oninput="searchProducts(this.value)">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary"></i>
+                            <button id="clearSearch" onclick="clearSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-secondary transition-colors" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="searchResults" class="mt-2 text-sm text-gray-600" style="display: none;"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="p-4">
-                <div class="flex items-center gap-3 mb-4">
-                    <button onclick="showPage('homePage')" class="text-secondary">
-                        <i class="fas fa-arrow-left text-xl"></i>
-                    </button>
-                    <h2 class="text-xl font-bold text-accent">Mana Store</h2>
-                    <div class="ml-auto flex gap-2">
-                        <button onclick="toggleWishlist()" class="text-secondary p-2">
-                            <i class="fas fa-heart text-xl"></i>
-                            <span class="text-xs" id="wishlistCount">0</span>
-                        </button>
-                        <button onclick="toggleCart()" class="text-secondary p-2">
-                            <i class="fas fa-shopping-cart text-xl"></i>
-                            <span class="text-xs" id="cartCount">0</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Search Bar -->
-                <div class="mb-4">
-                    <div class="relative">
-                        <input type="text" id="searchInput" placeholder="Search products..." 
-                               class="w-full p-3 pl-10 pr-10 border border-secondary rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
-                               oninput="searchProducts(this.value)">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary"></i>
-                        <button id="clearSearch" onclick="clearSearch()" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-secondary transition-colors" style="display: none;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div id="searchResults" class="mt-2 text-sm text-gray-600" style="display: none;"></div>
-                </div>
+            <!-- Store Content with Top Padding -->
+            <div class="pt-44 p-4">
 
                 <!-- Categories -->
                 <div class="mb-4">
@@ -1261,6 +1353,10 @@
         </div>
     </div>
 
+
+
+
+
     <!-- Location Permission Popup -->
     <div id="locationPopup" class="modal">
         <div class="location-popup">
@@ -1270,210 +1366,18 @@
             </div>
             <p class="text-sm mb-4 opacity-90">Please turn on location in your mobile and accept location permission for better service delivery</p>
             <div class="space-y-3">
-                <button onclick="requestLocationPermission()" class="w-full bg-white text-orange-600 px-4 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors">
+                <button type="button" onclick="requestLocationPermission()" class="w-full bg-white text-orange-600 px-4 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors">
                     <i class="fas fa-location-arrow mr-2"></i>
                     Enable Location
                 </button>
-                <button onclick="closeLocationPopup()" class="w-full bg-transparent border-2 border-white text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-white hover:text-orange-600 transition-colors">
+                <button type="button" onclick="closeLocationPopup()" class="w-full bg-transparent border-2 border-white text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-white hover:text-orange-600 transition-colors">
                     Skip for Now
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Final Location Check Popup -->
-    <div id="finalLocationPopup" class="modal">
-        <div class="location-popup">
-            <div class="flex items-center justify-center gap-2 mb-3">
-                <i class="fas fa-map-marker-alt text-2xl"></i>
-                <span class="font-bold text-lg">Location Required</span>
-            </div>
-            <p class="text-sm mb-4 opacity-90">For accurate delivery/service, please enable location sharing. Your exact location with accuracy details will be shared.</p>
-            <div class="space-y-3">
-                <button onclick="enableLocationAndProceed()" class="w-full bg-white text-orange-600 px-4 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors">
-                    <i class="fas fa-location-arrow mr-2"></i>
-                    Enable Location & Proceed
-                </button>
-                <button onclick="proceedWithoutLocation()" class="w-full bg-transparent border-2 border-white text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-white hover:text-orange-600 transition-colors">
-                    Proceed Without Location
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Welcome Popup -->
-    <div id="welcomePopup" class="modal">
-        <div class="welcome-popup">
-            <div class="relative z-10">
-                <div class="text-6xl mb-4">🎉</div>
-                <h2 class="text-2xl font-bold mb-3">Welcome to Mana Delivery!</h2>
-                <p class="text-lg mb-4 opacity-90">Telangana's Complete Service Platform</p>
-                <div class="space-y-2 text-sm opacity-80 mb-6">
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-store"></i>
-                        <span>Fresh Groceries</span>
-                    </div>
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-car"></i>
-                        <span>Transport & Tours</span>
-                    </div>
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-wrench"></i>
-                        <span>Professional Services</span>
-                    </div>
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Event Management</span>
-                    </div>
-                </div>
-                <div class="space-y-3">
-                    <button onclick="startExploring()" class="w-full bg-white text-secondary px-6 py-3 rounded-full font-bold text-lg hover:bg-gray-100 transition-colors shadow-lg">
-                        <i class="fas fa-rocket mr-2"></i>
-                        Start Exploring
-                    </button>
-                    <button onclick="showAppInfo()" class="w-full bg-transparent border-2 border-white text-white px-6 py-2 rounded-full font-semibold hover:bg-white hover:text-secondary transition-colors">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Learn More
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- App Info Popup -->
-    <div id="appInfoPopup" class="modal">
-        <div class="info-popup">
-            <div class="text-4xl mb-4 text-secondary">📱</div>
-            <h3 class="text-xl font-bold text-accent mb-3">About Mana Delivery</h3>
-            <div class="text-sm text-gray-700 space-y-3 text-left">
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-map-marker-alt text-secondary mt-1"></i>
-                    <div>
-                        <h4 class="font-semibold text-accent">Location-Based Service</h4>
-                        <p class="text-xs">Select your area to get personalized contact numbers and local services</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-phone text-secondary mt-1"></i>
-                    <div>
-                        <h4 class="font-semibold text-accent">Direct Communication</h4>
-                        <p class="text-xs">All orders and bookings go directly to your local Mana Delivery office</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-shield-alt text-secondary mt-1"></i>
-                    <div>
-                        <h4 class="font-semibold text-accent">Trusted & Reliable</h4>
-                        <p class="text-xs">Quality assured services with 24/7 customer support</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <i class="fas fa-heart text-secondary mt-1"></i>
-                    <div>
-                        <h4 class="font-semibold text-accent">Supporting Local</h4>
-                        <p class="text-xs">Connecting you with local vendors and service providers</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-6 space-y-2">
-                <button onclick="closeAppInfo()" class="w-full bg-secondary text-white px-6 py-3 rounded-lg font-semibold">
-                    <i class="fas fa-check mr-2"></i>
-                    Got It!
-                </button>
-                <button onclick="showLocationInfo()" class="w-full text-secondary text-sm hover:underline">
-                    Why do you need my location?
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Location Info Popup -->
-    <div id="locationInfoPopup" class="modal">
-        <div class="info-popup">
-            <div class="text-4xl mb-4 text-blue-500">📍</div>
-            <h3 class="text-xl font-bold text-accent mb-3">Location Permission</h3>
-            <div class="text-sm text-gray-700 space-y-3 text-left">
-                <div class="bg-green-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-green-800 mb-2">✅ What we use location for:</h4>
-                    <ul class="space-y-1 text-xs text-green-700">
-                        <li>• Accurate delivery to your doorstep</li>
-                        <li>• Finding nearest service providers</li>
-                        <li>• Faster response times</li>
-                        <li>• Better service coordination</li>
-                    </ul>
-                </div>
-                <div class="bg-blue-50 p-3 rounded-lg">
-                    <h4 class="font-semibold text-blue-800 mb-2">🔒 Your privacy is protected:</h4>
-                    <ul class="space-y-1 text-xs text-blue-700">
-                        <li>• Location shared only with assigned service provider</li>
-                        <li>• No location tracking or storage</li>
-                        <li>• You can skip location sharing anytime</li>
-                        <li>• Used only for current service request</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="mt-6 space-y-2">
-                <button onclick="enableLocationFromInfo()" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg font-semibold">
-                    <i class="fas fa-location-arrow mr-2"></i>
-                    Enable Location
-                </button>
-                <button onclick="closeLocationInfo()" class="w-full text-gray-500 text-sm hover:underline">
-                    Maybe Later
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feature Tour Popup -->
-    <div id="featureTourPopup" class="modal">
-        <div class="info-popup">
-            <div id="tourContent">
-                <!-- Tour content will be dynamically loaded -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Tips Popup -->
-    <div id="quickTipsPopup" class="modal">
-        <div class="info-popup">
-            <div class="text-4xl mb-4 text-yellow-500">💡</div>
-            <h3 class="text-xl font-bold text-accent mb-3">Quick Tips</h3>
-            <div class="text-sm text-gray-700 space-y-3 text-left">
-                <div class="flex items-start gap-3">
-                    <span class="bg-secondary text-white text-xs px-2 py-1 rounded-full font-bold">1</span>
-                    <div>
-                        <h4 class="font-semibold text-accent">Select Your Location First</h4>
-                        <p class="text-xs">Choose your area from the header to get local contact numbers</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="bg-secondary text-white text-xs px-2 py-1 rounded-full font-bold">2</span>
-                    <div>
-                        <h4 class="font-semibold text-accent">Use WhatsApp for Orders</h4>
-                        <p class="text-xs">All orders are sent via WhatsApp for quick confirmation</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="bg-secondary text-white text-xs px-2 py-1 rounded-full font-bold">3</span>
-                    <div>
-                        <h4 class="font-semibold text-accent">Enable Location for Better Service</h4>
-                        <p class="text-xs">Share location for accurate delivery and service</p>
-                    </div>
-                </div>
-                <div class="flex items-start gap-3">
-                    <span class="bg-secondary text-white text-xs px-2 py-1 rounded-full font-bold">4</span>
-                    <div>
-                        <h4 class="font-semibold text-accent">Save to Wishlist</h4>
-                        <p class="text-xs">Heart your favorite items for quick reordering</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="closeQuickTips()" class="w-full bg-secondary text-white px-6 py-3 rounded-lg font-semibold mt-6">
-                <i class="fas fa-thumbs-up mr-2"></i>
-                Thanks for the Tips!
-            </button>
-        </div>
-    </div>
+    <!-- Information popups removed -->
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
@@ -1486,6 +1390,7 @@
         let currentLocation = null;
         let carouselIndex = 0;
         let testimonialIndex = 0;
+        let offersCarouselIndex = 0;
         let pendingAction = null;
         let pendingData = null;
         let selectedLocationData = null;
@@ -1547,16 +1452,14 @@
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
             initializeCarousel();
+            initializeOffersCarousel();
             initializeTestimonialCarousel();
             checkInitialLocationStatus();
             showCategory('vegetables');
             initializeLocationSelector();
             loadSavedLocation();
             
-            // Show welcome popup for first-time visitors
-            setTimeout(() => {
-                showWelcomePopup();
-            }, 800);
+            // Welcome popup removed
             
             // Add enhanced interactions
             addEnhancedInteractions();
@@ -1583,11 +1486,6 @@
             const savedLocation = localStorage.getItem('selectedLocation');
             if (savedLocation && locationNumbers[savedLocation]) {
                 selectLocation(savedLocation, false);
-            } else {
-                // Show location selector on first visit
-                setTimeout(() => {
-                    showLocationSelector();
-                }, 1000);
             }
         }
 
@@ -1679,10 +1577,51 @@
             const track = document.getElementById('carouselTrack');
             const slides = track.children;
             
-            setInterval(() => {
-                carouselIndex = (carouselIndex + 1) % slides.length;
-                track.style.transform = `translateX(-${carouselIndex * 100}%)`;
-            }, 3000);
+            if (track && slides.length > 0) {
+                setInterval(() => {
+                    carouselIndex = (carouselIndex + 1) % slides.length;
+                    track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+                }, 4000);
+            }
+        }
+
+        // Offers carousel functionality
+        function initializeOffersCarousel() {
+            const track = document.getElementById('offersCarouselTrack');
+            const dots = document.querySelectorAll('.offers-dot');
+            
+            if (track && dots.length > 0) {
+                setInterval(() => {
+                    offersCarouselIndex = (offersCarouselIndex + 1) % dots.length;
+                    updateOffersCarousel();
+                }, 5000);
+            }
+        }
+
+        function goToOfferSlide(index) {
+            offersCarouselIndex = index;
+            updateOffersCarousel();
+        }
+
+        function updateOffersCarousel() {
+            const track = document.getElementById('offersCarouselTrack');
+            const dots = document.querySelectorAll('.offers-dot');
+            
+            if (track && dots.length > 0) {
+                // Move track
+                track.style.transform = `translateX(-${offersCarouselIndex * 100}%)`;
+                
+                // Update dots
+                dots.forEach((dot, index) => {
+                    if (index === offersCarouselIndex) {
+                        dot.classList.remove('bg-gray-400');
+                        dot.classList.add('bg-secondary');
+                    } else {
+                        dot.classList.remove('bg-secondary');
+                        dot.classList.add('bg-gray-400');
+                    }
+                });
+            }
         }
 
         // Testimonial carousel functionality
@@ -1725,76 +1664,7 @@
             }
         }
 
-        // Welcome and Info Popup Functions
-        function showWelcomePopup() {
-            const hasVisited = localStorage.getItem('hasVisitedManaDelivery');
-            if (!hasVisited) {
-                const popup = document.getElementById('welcomePopup');
-                popup.classList.add('active');
-                document.body.classList.add('modal-open');
-            }
-        }
-
-        function startExploring() {
-            localStorage.setItem('hasVisitedManaDelivery', 'true');
-            closeWelcomePopup();
-            
-            // Show quick tips after a short delay
-            setTimeout(() => {
-                showQuickTips();
-            }, 1000);
-        }
-
-        function closeWelcomePopup() {
-            const popup = document.getElementById('welcomePopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
-        }
-
-        function showAppInfo() {
-            closeWelcomePopup();
-            const popup = document.getElementById('appInfoPopup');
-            popup.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        function closeAppInfo() {
-            const popup = document.getElementById('appInfoPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
-            
-            localStorage.setItem('hasVisitedManaDelivery', 'true');
-        }
-
-        function showLocationInfo() {
-            closeAppInfo();
-            const popup = document.getElementById('locationInfoPopup');
-            popup.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        function closeLocationInfo() {
-            const popup = document.getElementById('locationInfoPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
-        }
-
-        function enableLocationFromInfo() {
-            closeLocationInfo();
-            requestLocationPermission();
-        }
-
-        function showQuickTips() {
-            const popup = document.getElementById('quickTipsPopup');
-            popup.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        function closeQuickTips() {
-            const popup = document.getElementById('quickTipsPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
-        }
+        // Information popup functions removed
 
         function addEnhancedInteractions() {
             // Add loading states to buttons
@@ -1907,16 +1777,7 @@
                 // Scroll to top of the page
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 
-                // Show/hide floating buttons based on page
-                const floatingButtons = document.getElementById('floatingButtons');
-                if (pageId === 'storePage') {
-                    setTimeout(() => {
-                        floatingButtons.style.display = 'flex';
-                        floatingButtons.style.animation = 'float 3s ease-in-out infinite';
-                    }, 300);
-                } else {
-                    floatingButtons.style.display = 'none';
-                }
+                // Floating buttons are always visible now - no need to show/hide
                 
                 // Update navigation with animation
                 document.querySelectorAll('.nav-item').forEach(item => {
@@ -1932,13 +1793,7 @@
                     activeNav.style.transform = 'translateY(-2px)';
                 }
                 
-                // Show page-specific tips
-                if (pageId === 'storePage' && !localStorage.getItem('storePageVisited')) {
-                    setTimeout(() => {
-                        showToast('💡 Tip: Use the heart icon to save items to your wishlist!');
-                        localStorage.setItem('storePageVisited', 'true');
-                    }, 1000);
-                }
+                // Page-specific tips removed
             }, 150);
         }
 
@@ -2046,8 +1901,12 @@
 
         function closeLocationPopup() {
             const popup = document.getElementById('locationPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
+            popup.classList.add('closing');
+            setTimeout(() => {
+                popup.classList.remove('active', 'closing');
+                popup.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }, 400);
         }
 
         // Search functionality
@@ -2289,14 +2148,60 @@
 
         function updateCartCount() {
             const count = cart.length;
-            document.getElementById('cartCount').textContent = count;
-            document.getElementById('floatingCartCount').textContent = count;
+            const cartCountElement = document.getElementById('cartCount');
+            const headerCartCount = document.getElementById('headerCartCount');
+            
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+                if (count > 0) {
+                    cartCountElement.style.display = 'flex';
+                } else {
+                    cartCountElement.style.display = 'none';
+                }
+            }
+            
+            if (headerCartCount) {
+                headerCartCount.textContent = count;
+            }
+            
+            // Show header cart button if cart has items
+            const headerCartBtn = document.getElementById('headerCartBtn');
+            if (headerCartBtn) {
+                if (count > 0) {
+                    headerCartBtn.style.display = 'block';
+                } else {
+                    headerCartBtn.style.display = 'none';
+                }
+            }
         }
 
         function updateWishlistCount() {
             const count = wishlist.length;
-            document.getElementById('wishlistCount').textContent = count;
-            document.getElementById('floatingWishlistCount').textContent = count;
+            const wishlistCountElement = document.getElementById('wishlistCount');
+            const headerWishlistCount = document.getElementById('headerWishlistCount');
+            
+            if (wishlistCountElement) {
+                wishlistCountElement.textContent = count;
+                if (count > 0) {
+                    wishlistCountElement.style.display = 'flex';
+                } else {
+                    wishlistCountElement.style.display = 'none';
+                }
+            }
+            
+            if (headerWishlistCount) {
+                headerWishlistCount.textContent = count;
+            }
+            
+            // Show header wishlist button if wishlist has items
+            const headerWishlistBtn = document.getElementById('headerWishlistBtn');
+            if (headerWishlistBtn) {
+                if (count > 0) {
+                    headerWishlistBtn.style.display = 'block';
+                } else {
+                    headerWishlistBtn.style.display = 'none';
+                }
+            }
         }
 
         function toggleCart() {
@@ -2454,10 +2359,8 @@
                 return;
             }
 
-            // Store pending action and show final location check
-            pendingAction = 'checkout';
-            pendingData = customerData;
-            showFinalLocationPopup();
+            // Get current location if available, then send WhatsApp order
+            getCurrentLocationAndSend('checkout', customerData);
         });
 
         function sendWhatsAppOrder(customerData, location) {
@@ -2499,17 +2402,25 @@ Order Time: ${timestamp}`;
             if (location) {
                 message += `
 
-*📍 Live Location Details:*
-🌐 Latitude: ${location.latitude}
-🌐 Longitude: ${location.longitude}
+*📍 PRECISE LOCATION DETAILS:*
+🌐 Latitude: ${location.latitude.toFixed(8)}
+🌐 Longitude: ${location.longitude.toFixed(8)}
 🎯 Accuracy: ${location.accuracy ? Math.round(location.accuracy) + ' meters' : 'Not available'}
-⏰ Location Time: ${timestamp}
-🗺️ Google Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+${location.altitude ? `🏔️ Altitude: ${Math.round(location.altitude)} meters` : ''}
+${location.heading ? `🧭 Heading: ${Math.round(location.heading)}°` : ''}
+${location.speed ? `⚡ Speed: ${Math.round(location.speed * 3.6)} km/h` : ''}
+⏰ Location Captured: ${new Date(location.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+
+*🗺️ NAVIGATION LINKS:*
+📱 Google Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}
+🚗 Directions: https://www.google.com/maps/dir//${location.latitude},${location.longitude}
+📍 Share Location: https://maps.google.com/maps?q=${location.latitude},${location.longitude}&z=18`;
             } else {
                 message += `
 
-*⚠️ Location Status:*
-Location sharing was declined by customer`;
+*⚠️ LOCATION STATUS:*
+❌ Location sharing was declined by customer
+📝 Please contact customer for address confirmation`;
             }
 
             message += `
@@ -2812,10 +2723,8 @@ Contact customer for any clarifications.`;
                 }
             }
 
-            // Store pending action and show final location check
-            pendingAction = 'booking';
-            pendingData = { type, subtype, data };
-            showFinalLocationPopup();
+            // Get current location if available, then send WhatsApp booking
+            getCurrentLocationAndSend('booking', { type, subtype, data });
         }
 
         function sendBookingWhatsApp(type, subtype, data, location) {
@@ -2855,17 +2764,25 @@ Contact customer for any clarifications.`;
             if (location) {
                 message += `
 
-*📍 Live Location Details:*
-🌐 Latitude: ${location.latitude}
-🌐 Longitude: ${location.longitude}
+*📍 PRECISE LOCATION DETAILS:*
+🌐 Latitude: ${location.latitude.toFixed(8)}
+🌐 Longitude: ${location.longitude.toFixed(8)}
 🎯 Accuracy: ${location.accuracy ? Math.round(location.accuracy) + ' meters' : 'Not available'}
-⏰ Location Time: ${timestamp}
-🗺️ Google Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}`;
+${location.altitude ? `🏔️ Altitude: ${Math.round(location.altitude)} meters` : ''}
+${location.heading ? `🧭 Heading: ${Math.round(location.heading)}°` : ''}
+${location.speed ? `⚡ Speed: ${Math.round(location.speed * 3.6)} km/h` : ''}
+⏰ Location Captured: ${new Date(location.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+
+*🗺️ NAVIGATION LINKS:*
+📱 Google Maps: https://maps.google.com/?q=${location.latitude},${location.longitude}
+🚗 Directions: https://www.google.com/maps/dir//${location.latitude},${location.longitude}
+📍 Share Location: https://maps.google.com/maps?q=${location.latitude},${location.longitude}&z=18`;
             } else {
                 message += `
 
-*⚠️ Location Status:*
-Location sharing was declined by customer`;
+*⚠️ LOCATION STATUS:*
+❌ Location sharing was declined by customer
+📝 Please contact customer for address confirmation`;
             }
 
             message += `
@@ -2913,81 +2830,82 @@ Contact customer for service coordination.`;
             document.body.classList.remove('modal-open');
         }
 
-        function showFinalLocationPopup() {
-            const popup = document.getElementById('finalLocationPopup');
-            popup.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        function closeFinalLocationPopup() {
-            const popup = document.getElementById('finalLocationPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
-        }
-
-        function enableLocationAndProceed() {
-            showToast('Getting your location with high accuracy...');
-            
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    currentLocation = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                        accuracy: position.coords.accuracy,
-                        timestamp: position.timestamp
-                    };
-                    
-                    closeFinalLocationPopup();
-                    updateLocationStatus(true);
-                    
-                    // Execute pending action with location
-                    if (pendingAction === 'checkout') {
-                        sendWhatsAppOrder(pendingData, currentLocation);
-                    } else if (pendingAction === 'booking') {
-                        sendBookingWhatsApp(pendingData.type, pendingData.subtype, pendingData.data, currentLocation);
-                    }
-                    
-                    // Clear pending action
-                    pendingAction = null;
-                    pendingData = null;
-                },
-                (error) => {
-                    showToast('Location access failed. Proceeding without location.');
-                    closeFinalLocationPopup();
-                    
-                    // Execute pending action without location
-                    if (pendingAction === 'checkout') {
-                        sendWhatsAppOrder(pendingData, null);
-                    } else if (pendingAction === 'booking') {
-                        sendBookingWhatsApp(pendingData.type, pendingData.subtype, pendingData.data, null);
-                    }
-                    
-                    // Clear pending action
-                    pendingAction = null;
-                    pendingData = null;
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0
+        function getCurrentLocationAndSend(actionType, actionData) {
+            if (!navigator.geolocation) {
+                // No geolocation support, proceed without location
+                if (actionType === 'checkout') {
+                    sendWhatsAppOrder(actionData, null);
+                } else if (actionType === 'booking') {
+                    sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
                 }
-            );
-        }
+                return;
+            }
 
-        function proceedWithoutLocation() {
-            closeFinalLocationPopup();
+            showToast('Getting your location for accurate service...', 'info', 2000);
             
-            // Execute pending action without location
-            if (pendingAction === 'checkout') {
-                sendWhatsAppOrder(pendingData, null);
-            } else if (pendingAction === 'booking') {
-                sendBookingWhatsApp(pendingData.type, pendingData.subtype, pendingData.data, null);
+            // Multiple attempts for maximum accuracy
+            let attempts = 0;
+            const maxAttempts = 3;
+            let bestLocation = null;
+            
+            function attemptLocationCapture() {
+                attempts++;
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            altitudeAccuracy: position.coords.altitudeAccuracy,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed,
+                            timestamp: position.timestamp
+                        };
+                        
+                        // Keep the most accurate reading
+                        if (!bestLocation || (newLocation.accuracy && newLocation.accuracy < bestLocation.accuracy)) {
+                            bestLocation = newLocation;
+                        }
+                        
+                        // If we have good accuracy (under 20 meters) or reached max attempts
+                        if ((bestLocation.accuracy && bestLocation.accuracy <= 20) || attempts >= maxAttempts) {
+                            currentLocation = bestLocation;
+                            updateLocationStatus(true);
+                            
+                            // Execute action with location
+                            if (actionType === 'checkout') {
+                                sendWhatsAppOrder(actionData, currentLocation);
+                            } else if (actionType === 'booking') {
+                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, currentLocation);
+                            }
+                        } else {
+                            // Try again for better accuracy
+                            setTimeout(() => attemptLocationCapture(), 1000);
+                        }
+                    },
+                    (error) => {
+                        // Location failed, proceed without location
+                        if (actionType === 'checkout') {
+                            sendWhatsAppOrder(actionData, null);
+                        } else if (actionType === 'booking') {
+                            sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
+                        }
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
             }
             
-            // Clear pending action
-            pendingAction = null;
-            pendingData = null;
+            // Start location capture
+            attemptLocationCapture();
         }
+
+
 
         // Confirmation popup functions
         function showConfirmation(icon, title, message) {
@@ -3011,8 +2929,12 @@ Contact customer for service coordination.`;
 
         function closeConfirmation() {
             const popup = document.getElementById('confirmationPopup');
-            popup.classList.remove('active');
-            document.body.classList.remove('modal-open');
+            popup.classList.add('closing');
+            setTimeout(() => {
+                popup.classList.remove('active', 'closing');
+                popup.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }, 400);
         }
 
         // Enhanced Utility functions
@@ -3095,5 +3017,5 @@ Contact customer for service coordination.`;
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9905bad9b089ca8c',t:'MTc2MDc2NjMzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9905f8fb46f2ca8c',t:'MTc2MDc2ODg3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
