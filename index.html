@@ -1294,10 +1294,10 @@
                     <label for="customerAddress" class="block text-sm font-semibold text-accent mb-1">Address</label>
                     <textarea id="customerAddress" name="customerAddress" required rows="3" class="w-full p-3 border border-secondary rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"></textarea>
                 </div>
-                <div id="checkoutLocationStatus" class="p-3 rounded-lg">
-                    <p class="text-sm font-semibold">
+                <div id="checkoutLocationStatus" class="bg-blue-50 p-3 rounded-lg">
+                    <p class="text-sm font-semibold text-blue-800">
                         <i class="fas fa-map-marker-alt mr-2"></i>
-                        <span id="checkoutLocationText">Turn on location in your mobile and accept permission for accurate delivery</span>
+                        <span id="checkoutLocationText">Location will be captured during order for accurate delivery</span>
                     </p>
                 </div>
                 <button type="submit" class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold flex items-center justify-center gap-2">
@@ -1470,102 +1470,8 @@
         });
 
         function addLocationValidation() {
-            // Override all booking and order functions to check location first
-            const originalFunctions = {
-                proceedToCheckout: window.proceedToCheckout,
-                bookTransport: window.bookTransport,
-                bookTour: window.bookTour,
-                bookService: window.bookService,
-                bookEvent: window.bookEvent,
-                requestService: window.requestService,
-                joinAs: window.joinAs,
-                openQuickTransport: window.openQuickTransport,
-                openQuickHomeDelivery: window.openQuickHomeDelivery,
-                openQuickDelivery: window.openQuickDelivery
-            };
-
-            // Override proceedToCheckout
-            window.proceedToCheckout = function() {
-                if (!validateLocationForAction('checkout')) return;
-                originalFunctions.proceedToCheckout();
-            };
-
-            // Override booking functions
-            window.bookTransport = function(type) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.bookTransport(type);
-            };
-
-            window.bookTour = function(destination) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.bookTour(destination);
-            };
-
-            window.bookService = function(service) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.bookService(service);
-            };
-
-            window.bookEvent = function(eventType) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.bookEvent(eventType);
-            };
-
-            window.requestService = function(serviceType) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.requestService(serviceType);
-            };
-
-            window.joinAs = function(role) {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.joinAs(role);
-            };
-
-            window.openQuickTransport = function() {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.openQuickTransport();
-            };
-
-            window.openQuickHomeDelivery = function() {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.openQuickHomeDelivery();
-            };
-
-            window.openQuickDelivery = function() {
-                if (!validateLocationForAction('booking')) return;
-                originalFunctions.openQuickDelivery();
-            };
-        }
-
-        function validateLocationForAction(actionType) {
-            // Check if location is available and reasonably accurate
-            if (!currentLocation || !currentLocation.latitude) {
-                showLocationRequiredToast(actionType);
-                setTimeout(() => showLocationPopup(), 500);
-                return false;
-            }
-
-            // Check if location is too inaccurate
-            if (currentLocation.accuracy > 200) {
-                showToast(`📍 Location accuracy is ${Math.round(currentLocation.accuracy)}m. Trying to improve...`, 'warning');
-                requestLocationPermission();
-                return false;
-            }
-
-            // Check if location is too old (more than 10 minutes)
-            const locationAge = Date.now() - currentLocation.timestamp;
-            if (locationAge > 600000) { // 10 minutes
-                showToast('📍 Location data is outdated. Refreshing...', 'info');
-                requestLocationPermission();
-                return false;
-            }
-
-            return true;
-        }
-
-        function showLocationRequiredToast(actionType) {
-            const actionName = actionType === 'checkout' ? 'place orders' : 'book services';
-            showToast(`🚫 Location access required to ${actionName}. Please enable location permission.`, 'error', 4000);
+            // Location validation removed - location is now optional
+            // Functions will work without location but will attempt to capture it during order/booking
         }
 
         function initializeLocationSelector() {
@@ -1655,12 +1561,12 @@
         }
 
         function checkInitialLocationStatus() {
-            // Check if location is already available
+            // Check if location is already available (optional)
             if (navigator.geolocation) {
                 // Start continuous location tracking
                 startLocationTracking();
                 
-                // Initial location capture with high accuracy
+                // Initial location capture with high accuracy (silent)
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         currentLocation = {
@@ -1673,24 +1579,22 @@
                             timestamp: position.timestamp
                         };
                         updateLocationStatus(true);
-                        showToast(`Location captured with ${Math.round(position.coords.accuracy)}m accuracy`, 'success');
+                        showToast(`📍 Location enabled with ${Math.round(position.coords.accuracy)}m accuracy`, 'success', 2000);
                     },
                     (error) => {
                         updateLocationStatus(false);
-                        handleLocationError(error);
-                        // Show mandatory location popup
-                        setTimeout(() => showLocationPopup(), 1000);
+                        // Silent error handling - no popup shown
+                        console.log('Location not available:', error.message);
                     },
                     { 
                         enableHighAccuracy: true,
-                        timeout: 15000, 
+                        timeout: 10000, 
                         maximumAge: 60000 
                     }
                 );
             } else {
                 updateLocationStatus(false);
-                showToast('Geolocation not supported by this browser', 'error');
-                setTimeout(() => showLocationPopup(), 1000);
+                console.log('Geolocation not supported by this browser');
             }
         }
 
@@ -2171,36 +2075,48 @@
             if (enabled) {
                 // Update header button
                 if (locationBtn) {
-                    locationBtn.className = 'bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors';
+                    locationBtn.className = 'bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors relative';
                 }
                 
                 // Update checkout form
                 if (checkoutStatus) {
-                    checkoutStatus.className = 'bg-green-100 p-3 rounded-lg';
-                    checkoutText.textContent = 'Location enabled - Your location will be shared for accurate delivery';
+                    checkoutStatus.className = 'bg-green-50 p-3 rounded-lg';
+                    if (checkoutText) {
+                        checkoutText.textContent = 'Location enabled - Will be shared for accurate delivery';
+                        checkoutText.className = 'text-sm font-semibold text-green-800';
+                    }
                 }
                 
                 // Update booking forms
                 if (bookingStatus) {
-                    bookingStatus.className = 'bg-green-100 p-3 rounded-lg';
-                    bookingText.textContent = 'Location enabled - Your location will be shared for better service';
+                    bookingStatus.className = 'bg-green-50 p-3 rounded-lg';
+                    if (bookingText) {
+                        bookingText.textContent = 'Location enabled - Will be shared for accurate service';
+                        bookingText.className = 'text-sm font-semibold text-green-800';
+                    }
                 }
             } else {
                 // Update header button
                 if (locationBtn) {
-                    locationBtn.className = 'bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors';
+                    locationBtn.className = 'bg-gray-500 text-white p-2 rounded-full hover:bg-gray-600 transition-colors relative';
                 }
                 
                 // Update checkout form
                 if (checkoutStatus) {
-                    checkoutStatus.className = 'bg-red-100 p-3 rounded-lg';
-                    checkoutText.textContent = 'Turn on location in your mobile and accept permission for accurate delivery';
+                    checkoutStatus.className = 'bg-blue-50 p-3 rounded-lg';
+                    if (checkoutText) {
+                        checkoutText.textContent = 'Location will be captured during order for accurate delivery';
+                        checkoutText.className = 'text-sm font-semibold text-blue-800';
+                    }
                 }
                 
                 // Update booking forms
                 if (bookingStatus) {
-                    bookingStatus.className = 'bg-red-100 p-3 rounded-lg';
-                    bookingText.textContent = 'Turn on location in your mobile and accept permission for accurate service';
+                    bookingStatus.className = 'bg-blue-50 p-3 rounded-lg';
+                    if (bookingText) {
+                        bookingText.textContent = 'Location will be captured during booking for accurate service';
+                        bookingText.className = 'text-sm font-semibold text-blue-800';
+                    }
                 }
             }
         }
@@ -2675,8 +2591,8 @@
                 return;
             }
 
-            // Get current location if available, then send WhatsApp order
-            getCurrentLocationAndSend('checkout', customerData);
+            // Capture location during checkout and send WhatsApp order
+            captureLocationForOrder('checkout', customerData);
         });
 
         function sendWhatsAppOrder(customerData, location) {
@@ -2763,6 +2679,8 @@ Contact customer for any clarifications.`;
             openBookingModal('transport', type, {
                 title: `Book ${type.charAt(0).toUpperCase() + type.slice(1)}`,
                 fields: [
+                    { name: 'name', label: 'Full Name', type: 'text', required: true },
+                    { name: 'phone', label: 'Phone Number', type: 'tel', required: true },
                     { name: 'pickup', label: 'Pickup Location', type: 'text', required: true },
                     { name: 'destination', label: 'Destination', type: 'text', required: true },
                     { name: 'date', label: 'Date', type: 'date', required: true },
@@ -2923,10 +2841,10 @@ Contact customer for any clarifications.`;
                         </div>
                         <form id="bookingForm" class="space-y-4">
                             ${config.fields.map(field => createFormField(field)).join('')}
-                            <div id="bookingLocationStatus" class="p-3 rounded-lg">
-                                <p class="text-sm font-semibold">
+                            <div id="bookingLocationStatus" class="bg-blue-50 p-3 rounded-lg">
+                                <p class="text-sm font-semibold text-blue-800">
                                     <i class="fas fa-map-marker-alt mr-2"></i>
-                                    <span id="bookingLocationText">Turn on location in your mobile and accept permission for accurate service</span>
+                                    <span id="bookingLocationText">Location will be captured during booking for accurate service</span>
                                 </p>
                             </div>
                             <button type="submit" class="w-full bg-green-500 text-white p-3 rounded-lg font-semibold flex items-center justify-center gap-2">
@@ -3039,8 +2957,8 @@ Contact customer for any clarifications.`;
                 }
             }
 
-            // Get current location if available, then send WhatsApp booking
-            getCurrentLocationAndSend('booking', { type, subtype, data });
+            // Capture location during booking and send WhatsApp booking
+            captureLocationForOrder('booking', { type, subtype, data });
         }
 
         function sendBookingWhatsApp(type, subtype, data, location) {
@@ -3146,28 +3064,24 @@ Contact customer for service coordination.`;
             document.body.classList.remove('modal-open');
         }
 
-        function getCurrentLocationAndSend(actionType, actionData) {
-            // Check if location is already available and accurate
-            if (currentLocation && currentLocation.accuracy <= 50) {
-                // Use existing location if it's accurate enough
+        function captureLocationForOrder(actionType, actionData) {
+            // Show location capture message
+            showToast('📍 Capturing your location for accurate service...', 'info', 2000);
+            
+            if (!navigator.geolocation) {
+                // No geolocation support - proceed without location
+                showToast('⚠️ Location not supported - proceeding without location', 'warning');
                 if (actionType === 'checkout') {
-                    sendWhatsAppOrder(actionData, currentLocation);
+                    sendWhatsAppOrder(actionData, null);
                 } else if (actionType === 'booking') {
-                    sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, currentLocation);
+                    sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
                 }
                 return;
             }
 
-            if (!navigator.geolocation) {
-                showLocationMandatoryPopup(actionType, actionData);
-                return;
-            }
-
-            showToast('🎯 Capturing precise location for accurate service...', 'info', 3000);
-            
             // Enhanced location capture with multiple attempts
             let attempts = 0;
-            const maxAttempts = 5;
+            const maxAttempts = 3;
             let bestLocation = currentLocation;
             let locationTimeout;
             
@@ -3198,20 +3112,12 @@ Contact customer for service coordination.`;
                             currentLocation = bestLocation;
                             updateLocationStatus(true);
                             updateLocationDisplay();
-                            
-                            showToast(`📍 Location accuracy: ${Math.round(newLocation.accuracy)}m`, 'info', 1000);
                         }
                         
-                        // Continue until we get excellent accuracy or max attempts
-                        if (bestLocation.accuracy <= 10 || attempts >= maxAttempts) {
-                            // Excellent accuracy or max attempts reached
-                            if (actionType === 'checkout') {
-                                sendWhatsAppOrder(actionData, bestLocation);
-                            } else if (actionType === 'booking') {
-                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, bestLocation);
-                            }
-                        } else if (bestLocation.accuracy <= 30 && attempts >= 3) {
-                            // Good enough accuracy after 3 attempts
+                        // Continue until we get good accuracy or max attempts
+                        if (bestLocation.accuracy <= 20 || attempts >= maxAttempts) {
+                            // Good accuracy or max attempts reached
+                            showToast(`✅ Location captured with ${Math.round(bestLocation.accuracy)}m accuracy`, 'success', 1500);
                             if (actionType === 'checkout') {
                                 sendWhatsAppOrder(actionData, bestLocation);
                             } else if (actionType === 'booking') {
@@ -3219,29 +3125,36 @@ Contact customer for service coordination.`;
                             }
                         } else {
                             // Try again for better accuracy
-                            showToast(`🔄 Improving accuracy... ${attempts}/${maxAttempts} (${Math.round(bestLocation.accuracy)}m)`, 'info', 1500);
-                            locationTimeout = setTimeout(() => attemptLocationCapture(), 2000);
+                            showToast(`🔄 Improving location accuracy... ${attempts}/${maxAttempts}`, 'info', 1000);
+                            locationTimeout = setTimeout(() => attemptLocationCapture(), 1500);
                         }
                     },
                     (error) => {
-                        handleLocationError(error);
+                        // Location error - proceed without location
+                        console.log('Location capture failed:', error.message);
                         
-                        // If we have any location, use it, otherwise show mandatory popup
                         if (bestLocation && bestLocation.latitude) {
-                            showToast('⚠️ Using last known location due to GPS error', 'warning');
+                            // Use existing location if available
+                            showToast('📍 Using previous location', 'info', 1500);
                             if (actionType === 'checkout') {
                                 sendWhatsAppOrder(actionData, bestLocation);
                             } else if (actionType === 'booking') {
                                 sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, bestLocation);
                             }
                         } else {
-                            showLocationMandatoryPopup(actionType, actionData);
+                            // Proceed without location
+                            showToast('⚠️ Location unavailable - proceeding without location', 'warning', 2000);
+                            if (actionType === 'checkout') {
+                                sendWhatsAppOrder(actionData, null);
+                            } else if (actionType === 'booking') {
+                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
+                            }
                         }
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 20000,
-                        maximumAge: 0
+                        timeout: 10000,
+                        maximumAge: 30000
                     }
                 );
             }
@@ -3250,81 +3163,7 @@ Contact customer for service coordination.`;
             attemptLocationCapture();
         }
 
-        function showLocationMandatoryPopup(actionType, actionData) {
-            const popup = document.getElementById('locationPopup');
-            const popupContent = popup.querySelector('.location-popup');
-            
-            // Update popup content to show it's mandatory
-            popupContent.innerHTML = `
-                <div class="flex items-center justify-center gap-2 mb-3">
-                    <i class="fas fa-exclamation-triangle text-3xl text-yellow-300"></i>
-                    <span class="font-bold text-lg">Location Required</span>
-                </div>
-                <p class="text-sm mb-4 opacity-90 text-center">
-                    <strong>Location access is mandatory</strong> for accurate service delivery. 
-                    Please enable location permission to continue with your ${actionType === 'checkout' ? 'order' : 'booking'}.
-                </p>
-                <div class="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
-                    <p class="text-xs text-center">
-                        <i class="fas fa-shield-alt mr-1"></i>
-                        Your location is only used for service delivery and is not stored or shared.
-                    </p>
-                </div>
-                <div class="space-y-3">
-                    <button type="button" onclick="retryLocationForAction('${actionType}', ${JSON.stringify(actionData).replace(/"/g, '&quot;')})" 
-                            class="w-full bg-white text-orange-600 px-4 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors">
-                        <i class="fas fa-location-arrow mr-2"></i>
-                        Enable Location & Continue
-                    </button>
-                    <button type="button" onclick="closeLocationPopup()" 
-                            class="w-full bg-transparent border-2 border-white text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-white hover:text-orange-600 transition-colors">
-                        Cancel ${actionType === 'checkout' ? 'Order' : 'Booking'}
-                    </button>
-                </div>
-            `;
-            
-            popup.classList.add('active');
-            document.body.classList.add('modal-open');
-        }
-
-        function retryLocationForAction(actionType, actionData) {
-            closeLocationPopup();
-            
-            // Store the pending action
-            pendingAction = actionType;
-            pendingData = actionData;
-            
-            // Request location permission
-            requestLocationPermission();
-            
-            // Set up a callback for when location is obtained
-            const checkLocationInterval = setInterval(() => {
-                if (currentLocation && currentLocation.accuracy <= 100) {
-                    clearInterval(checkLocationInterval);
-                    
-                    // Execute the pending action
-                    if (pendingAction === 'checkout') {
-                        sendWhatsAppOrder(pendingData, currentLocation);
-                    } else if (pendingAction === 'booking') {
-                        sendBookingWhatsApp(pendingData.type, pendingData.subtype, pendingData.data, currentLocation);
-                    }
-                    
-                    // Clear pending action
-                    pendingAction = null;
-                    pendingData = null;
-                }
-            }, 1000);
-            
-            // Clear interval after 30 seconds if no location
-            setTimeout(() => {
-                clearInterval(checkLocationInterval);
-                if (pendingAction) {
-                    showToast('❌ Location required for service. Please try again.', 'error');
-                    pendingAction = null;
-                    pendingData = null;
-                }
-            }, 30000);
-        }
+        // Mandatory location popup functions removed - location is now optional
 
 
 
@@ -3438,5 +3277,5 @@ Contact customer for service coordination.`;
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99060ab555fe9149',t:'MTc2MDc2OTYwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9906196445e57ea4',t:'MTc2MDc3MDIwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
