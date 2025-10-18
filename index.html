@@ -352,8 +352,11 @@
                     <i class="fas fa-shopping-cart text-lg"></i>
                     <span class="absolute -top-1 -right-1 bg-white text-green-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md" id="headerCartCount">0</span>
                 </button>
-                <button onclick="requestLocationPermission()" id="locationBtn" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+                <button onclick="requestLocationPermission()" id="locationBtn" class="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors relative" title="Click to enable location">
                     <i class="fas fa-crosshairs text-lg"></i>
+                    <div id="locationAccuracy" class="absolute -bottom-1 -right-1 bg-white text-red-500 text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md" style="display: none;">
+                        <i class="fas fa-signal text-xs"></i>
+                    </div>
                 </button>
                 <a href="tel:7799086877" id="callBtn" class="bg-white text-secondary p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <i class="fas fa-phone text-lg"></i>
@@ -1459,11 +1462,111 @@
             initializeLocationSelector();
             loadSavedLocation();
             
-            // Welcome popup removed
-            
             // Add enhanced interactions
             addEnhancedInteractions();
+            
+            // Add location validation to all action buttons
+            addLocationValidation();
         });
+
+        function addLocationValidation() {
+            // Override all booking and order functions to check location first
+            const originalFunctions = {
+                proceedToCheckout: window.proceedToCheckout,
+                bookTransport: window.bookTransport,
+                bookTour: window.bookTour,
+                bookService: window.bookService,
+                bookEvent: window.bookEvent,
+                requestService: window.requestService,
+                joinAs: window.joinAs,
+                openQuickTransport: window.openQuickTransport,
+                openQuickHomeDelivery: window.openQuickHomeDelivery,
+                openQuickDelivery: window.openQuickDelivery
+            };
+
+            // Override proceedToCheckout
+            window.proceedToCheckout = function() {
+                if (!validateLocationForAction('checkout')) return;
+                originalFunctions.proceedToCheckout();
+            };
+
+            // Override booking functions
+            window.bookTransport = function(type) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.bookTransport(type);
+            };
+
+            window.bookTour = function(destination) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.bookTour(destination);
+            };
+
+            window.bookService = function(service) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.bookService(service);
+            };
+
+            window.bookEvent = function(eventType) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.bookEvent(eventType);
+            };
+
+            window.requestService = function(serviceType) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.requestService(serviceType);
+            };
+
+            window.joinAs = function(role) {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.joinAs(role);
+            };
+
+            window.openQuickTransport = function() {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.openQuickTransport();
+            };
+
+            window.openQuickHomeDelivery = function() {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.openQuickHomeDelivery();
+            };
+
+            window.openQuickDelivery = function() {
+                if (!validateLocationForAction('booking')) return;
+                originalFunctions.openQuickDelivery();
+            };
+        }
+
+        function validateLocationForAction(actionType) {
+            // Check if location is available and reasonably accurate
+            if (!currentLocation || !currentLocation.latitude) {
+                showLocationRequiredToast(actionType);
+                setTimeout(() => showLocationPopup(), 500);
+                return false;
+            }
+
+            // Check if location is too inaccurate
+            if (currentLocation.accuracy > 200) {
+                showToast(`📍 Location accuracy is ${Math.round(currentLocation.accuracy)}m. Trying to improve...`, 'warning');
+                requestLocationPermission();
+                return false;
+            }
+
+            // Check if location is too old (more than 10 minutes)
+            const locationAge = Date.now() - currentLocation.timestamp;
+            if (locationAge > 600000) { // 10 minutes
+                showToast('📍 Location data is outdated. Refreshing...', 'info');
+                requestLocationPermission();
+                return false;
+            }
+
+            return true;
+        }
+
+        function showLocationRequiredToast(actionType) {
+            const actionName = actionType === 'checkout' ? 'place orders' : 'book services';
+            showToast(`🚫 Location access required to ${actionName}. Please enable location permission.`, 'error', 4000);
+        }
 
         function initializeLocationSelector() {
             const locationList = document.getElementById('locationList');
@@ -1554,21 +1657,40 @@
         function checkInitialLocationStatus() {
             // Check if location is already available
             if (navigator.geolocation) {
+                // Start continuous location tracking
+                startLocationTracking();
+                
+                // Initial location capture with high accuracy
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         currentLocation = {
                             latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed,
+                            timestamp: position.timestamp
                         };
                         updateLocationStatus(true);
+                        showToast(`Location captured with ${Math.round(position.coords.accuracy)}m accuracy`, 'success');
                     },
                     (error) => {
                         updateLocationStatus(false);
+                        handleLocationError(error);
+                        // Show mandatory location popup
+                        setTimeout(() => showLocationPopup(), 1000);
                     },
-                    { timeout: 5000, maximumAge: 300000 }
+                    { 
+                        enableHighAccuracy: true,
+                        timeout: 15000, 
+                        maximumAge: 60000 
+                    }
                 );
             } else {
                 updateLocationStatus(false);
+                showToast('Geolocation not supported by this browser', 'error');
+                setTimeout(() => showLocationPopup(), 1000);
             }
         }
 
@@ -1797,52 +1919,246 @@
             }, 150);
         }
 
-        // Location functions
-        function requestLocationPermission() {
-            if (!navigator.geolocation) {
-                showToast('Geolocation is not supported by this browser');
-                return;
+        // Global location tracking variables
+        let locationWatchId = null;
+        let locationAttempts = 0;
+        let bestAccuracy = Infinity;
+        let locationUpdateInterval = null;
+
+        // Continuous location tracking system
+        function startLocationTracking() {
+            if (!navigator.geolocation) return;
+
+            // Clear any existing tracking
+            if (locationWatchId) {
+                navigator.geolocation.clearWatch(locationWatchId);
+            }
+            if (locationUpdateInterval) {
+                clearInterval(locationUpdateInterval);
             }
 
-            showToast('Requesting location permission...');
-            
-            navigator.geolocation.getCurrentPosition(
+            // Start watching position with high accuracy
+            locationWatchId = navigator.geolocation.watchPosition(
                 (position) => {
-                    currentLocation = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    };
-                    updateLocationStatus(true);
-                    closeLocationPopup();
-                    showToast('Location enabled successfully!');
+                    const newAccuracy = position.coords.accuracy;
+                    
+                    // Update if this is more accurate or first reading
+                    if (newAccuracy < bestAccuracy || !currentLocation) {
+                        bestAccuracy = newAccuracy;
+                        currentLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            altitudeAccuracy: position.coords.altitudeAccuracy,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed,
+                            timestamp: position.timestamp
+                        };
+                        
+                        updateLocationStatus(true);
+                        updateLocationDisplay();
+                        
+                        // Show accuracy improvement
+                        if (newAccuracy <= 10) {
+                            showToast(`📍 High accuracy location: ${Math.round(newAccuracy)}m`, 'success', 2000);
+                        } else if (newAccuracy <= 50) {
+                            showToast(`📍 Good location accuracy: ${Math.round(newAccuracy)}m`, 'info', 1500);
+                        }
+                    }
                 },
                 (error) => {
-                    updateLocationStatus(false);
-                    let errorMessage = 'Location access denied. ';
-                    
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            errorMessage += 'Please turn on location in your mobile settings and refresh the page.';
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            errorMessage += 'Location information is unavailable.';
-                            break;
-                        case error.TIMEOUT:
-                            errorMessage += 'Location request timed out.';
-                            break;
-                        default:
-                            errorMessage += 'An unknown error occurred.';
-                            break;
-                    }
-                    
-                    showToast(errorMessage);
+                    handleLocationError(error);
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 300000
+                    timeout: 20000,
+                    maximumAge: 30000
                 }
             );
+
+            // Periodic location refresh for maximum accuracy
+            locationUpdateInterval = setInterval(() => {
+                if (currentLocation && currentLocation.accuracy > 20) {
+                    // Try to get better accuracy
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            if (position.coords.accuracy < currentLocation.accuracy) {
+                                currentLocation = {
+                                    latitude: position.coords.latitude,
+                                    longitude: position.coords.longitude,
+                                    accuracy: position.coords.accuracy,
+                                    altitude: position.coords.altitude,
+                                    altitudeAccuracy: position.coords.altitudeAccuracy,
+                                    heading: position.coords.heading,
+                                    speed: position.coords.speed,
+                                    timestamp: position.timestamp
+                                };
+                                updateLocationDisplay();
+                            }
+                        },
+                        () => {}, // Ignore errors in periodic updates
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        }
+                    );
+                }
+            }, 60000); // Check every minute
+        }
+
+        function handleLocationError(error) {
+            let errorMessage = '';
+            let showPopup = false;
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = '🚫 Location access denied. Please enable location in your browser settings.';
+                    showPopup = true;
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = '📍 Location unavailable. Please check your GPS settings.';
+                    showPopup = true;
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = '⏱️ Location request timed out. Trying again...';
+                    // Retry automatically
+                    setTimeout(() => requestLocationPermission(), 2000);
+                    break;
+                default:
+                    errorMessage = '❌ Location error occurred. Please try again.';
+                    showPopup = true;
+            }
+            
+            showToast(errorMessage, 'error', 4000);
+            
+            if (showPopup) {
+                setTimeout(() => showLocationPopup(), 1000);
+            }
+        }
+
+        function updateLocationDisplay() {
+            if (currentLocation) {
+                // Update location button to show accuracy
+                const locationBtn = document.getElementById('locationBtn');
+                const locationAccuracy = document.getElementById('locationAccuracy');
+                
+                if (locationBtn && currentLocation.accuracy) {
+                    const accuracy = Math.round(currentLocation.accuracy);
+                    locationBtn.title = `📍 Location Active - Accuracy: ${accuracy}m\nLat: ${currentLocation.latitude.toFixed(6)}\nLng: ${currentLocation.longitude.toFixed(6)}\nClick to refresh location`;
+                    
+                    // Show accuracy indicator
+                    if (locationAccuracy) {
+                        locationAccuracy.style.display = 'flex';
+                        
+                        // Update accuracy indicator based on precision
+                        if (accuracy <= 10) {
+                            locationAccuracy.className = 'absolute -bottom-1 -right-1 bg-green-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md';
+                            locationAccuracy.innerHTML = '<i class="fas fa-check text-xs"></i>';
+                            locationAccuracy.title = `Excellent accuracy: ${accuracy}m`;
+                        } else if (accuracy <= 30) {
+                            locationAccuracy.className = 'absolute -bottom-1 -right-1 bg-blue-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md';
+                            locationAccuracy.innerHTML = '<i class="fas fa-signal text-xs"></i>';
+                            locationAccuracy.title = `Good accuracy: ${accuracy}m`;
+                        } else if (accuracy <= 100) {
+                            locationAccuracy.className = 'absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md';
+                            locationAccuracy.innerHTML = '<i class="fas fa-exclamation text-xs"></i>';
+                            locationAccuracy.title = `Fair accuracy: ${accuracy}m`;
+                        } else {
+                            locationAccuracy.className = 'absolute -bottom-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md';
+                            locationAccuracy.innerHTML = '<i class="fas fa-times text-xs"></i>';
+                            locationAccuracy.title = `Poor accuracy: ${accuracy}m`;
+                        }
+                    }
+                    
+                    // Change button color based on accuracy
+                    if (accuracy <= 10) {
+                        locationBtn.className = 'bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors pulse-glow relative';
+                    } else if (accuracy <= 30) {
+                        locationBtn.className = 'bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors relative';
+                    } else if (accuracy <= 100) {
+                        locationBtn.className = 'bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600 transition-colors relative';
+                    } else {
+                        locationBtn.className = 'bg-orange-500 text-white p-2 rounded-full hover:bg-orange-600 transition-colors relative';
+                    }
+                }
+            } else {
+                // No location available
+                const locationBtn = document.getElementById('locationBtn');
+                const locationAccuracy = document.getElementById('locationAccuracy');
+                
+                if (locationBtn) {
+                    locationBtn.className = 'bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors relative';
+                    locationBtn.title = '❌ Location not available - Click to enable';
+                }
+                
+                if (locationAccuracy) {
+                    locationAccuracy.style.display = 'none';
+                }
+            }
+        }
+
+        // Location functions
+        function requestLocationPermission() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation is not supported by this browser', 'error');
+                return;
+            }
+
+            showToast('🔍 Requesting high-accuracy location...', 'info');
+            locationAttempts++;
+            
+            // Multiple attempts for best accuracy
+            const maxAttempts = 3;
+            let attempts = 0;
+            
+            function attemptLocationCapture() {
+                attempts++;
+                
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const newLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            altitudeAccuracy: position.coords.altitudeAccuracy,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed,
+                            timestamp: position.timestamp
+                        };
+                        
+                        // Accept if good accuracy or max attempts reached
+                        if (position.coords.accuracy <= 20 || attempts >= maxAttempts) {
+                            currentLocation = newLocation;
+                            bestAccuracy = position.coords.accuracy;
+                            updateLocationStatus(true);
+                            updateLocationDisplay();
+                            closeLocationPopup();
+                            
+                            // Start continuous tracking
+                            startLocationTracking();
+                            
+                            showToast(`✅ Location enabled! Accuracy: ${Math.round(position.coords.accuracy)}m`, 'success');
+                        } else {
+                            // Try again for better accuracy
+                            showToast(`📍 Improving accuracy... (${Math.round(position.coords.accuracy)}m)`, 'info', 1000);
+                            setTimeout(() => attemptLocationCapture(), 1500);
+                        }
+                    },
+                    (error) => {
+                        handleLocationError(error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
+            }
+            
+            attemptLocationCapture();
         }
 
         function updateLocationStatus(enabled) {
@@ -2831,25 +3147,37 @@ Contact customer for service coordination.`;
         }
 
         function getCurrentLocationAndSend(actionType, actionData) {
-            if (!navigator.geolocation) {
-                // No geolocation support, proceed without location
+            // Check if location is already available and accurate
+            if (currentLocation && currentLocation.accuracy <= 50) {
+                // Use existing location if it's accurate enough
                 if (actionType === 'checkout') {
-                    sendWhatsAppOrder(actionData, null);
+                    sendWhatsAppOrder(actionData, currentLocation);
                 } else if (actionType === 'booking') {
-                    sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
+                    sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, currentLocation);
                 }
                 return;
             }
 
-            showToast('Getting your location for accurate service...', 'info', 2000);
+            if (!navigator.geolocation) {
+                showLocationMandatoryPopup(actionType, actionData);
+                return;
+            }
+
+            showToast('🎯 Capturing precise location for accurate service...', 'info', 3000);
             
-            // Multiple attempts for maximum accuracy
+            // Enhanced location capture with multiple attempts
             let attempts = 0;
-            const maxAttempts = 3;
-            let bestLocation = null;
+            const maxAttempts = 5;
+            let bestLocation = currentLocation;
+            let locationTimeout;
             
             function attemptLocationCapture() {
                 attempts++;
+                
+                // Clear any existing timeout
+                if (locationTimeout) {
+                    clearTimeout(locationTimeout);
+                }
                 
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
@@ -2867,35 +3195,52 @@ Contact customer for service coordination.`;
                         // Keep the most accurate reading
                         if (!bestLocation || (newLocation.accuracy && newLocation.accuracy < bestLocation.accuracy)) {
                             bestLocation = newLocation;
-                        }
-                        
-                        // If we have good accuracy (under 20 meters) or reached max attempts
-                        if ((bestLocation.accuracy && bestLocation.accuracy <= 20) || attempts >= maxAttempts) {
                             currentLocation = bestLocation;
                             updateLocationStatus(true);
+                            updateLocationDisplay();
                             
-                            // Execute action with location
+                            showToast(`📍 Location accuracy: ${Math.round(newLocation.accuracy)}m`, 'info', 1000);
+                        }
+                        
+                        // Continue until we get excellent accuracy or max attempts
+                        if (bestLocation.accuracy <= 10 || attempts >= maxAttempts) {
+                            // Excellent accuracy or max attempts reached
                             if (actionType === 'checkout') {
-                                sendWhatsAppOrder(actionData, currentLocation);
+                                sendWhatsAppOrder(actionData, bestLocation);
                             } else if (actionType === 'booking') {
-                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, currentLocation);
+                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, bestLocation);
+                            }
+                        } else if (bestLocation.accuracy <= 30 && attempts >= 3) {
+                            // Good enough accuracy after 3 attempts
+                            if (actionType === 'checkout') {
+                                sendWhatsAppOrder(actionData, bestLocation);
+                            } else if (actionType === 'booking') {
+                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, bestLocation);
                             }
                         } else {
                             // Try again for better accuracy
-                            setTimeout(() => attemptLocationCapture(), 1000);
+                            showToast(`🔄 Improving accuracy... ${attempts}/${maxAttempts} (${Math.round(bestLocation.accuracy)}m)`, 'info', 1500);
+                            locationTimeout = setTimeout(() => attemptLocationCapture(), 2000);
                         }
                     },
                     (error) => {
-                        // Location failed, proceed without location
-                        if (actionType === 'checkout') {
-                            sendWhatsAppOrder(actionData, null);
-                        } else if (actionType === 'booking') {
-                            sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, null);
+                        handleLocationError(error);
+                        
+                        // If we have any location, use it, otherwise show mandatory popup
+                        if (bestLocation && bestLocation.latitude) {
+                            showToast('⚠️ Using last known location due to GPS error', 'warning');
+                            if (actionType === 'checkout') {
+                                sendWhatsAppOrder(actionData, bestLocation);
+                            } else if (actionType === 'booking') {
+                                sendBookingWhatsApp(actionData.type, actionData.subtype, actionData.data, bestLocation);
+                            }
+                        } else {
+                            showLocationMandatoryPopup(actionType, actionData);
                         }
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 15000,
+                        timeout: 20000,
                         maximumAge: 0
                     }
                 );
@@ -2903,6 +3248,82 @@ Contact customer for service coordination.`;
             
             // Start location capture
             attemptLocationCapture();
+        }
+
+        function showLocationMandatoryPopup(actionType, actionData) {
+            const popup = document.getElementById('locationPopup');
+            const popupContent = popup.querySelector('.location-popup');
+            
+            // Update popup content to show it's mandatory
+            popupContent.innerHTML = `
+                <div class="flex items-center justify-center gap-2 mb-3">
+                    <i class="fas fa-exclamation-triangle text-3xl text-yellow-300"></i>
+                    <span class="font-bold text-lg">Location Required</span>
+                </div>
+                <p class="text-sm mb-4 opacity-90 text-center">
+                    <strong>Location access is mandatory</strong> for accurate service delivery. 
+                    Please enable location permission to continue with your ${actionType === 'checkout' ? 'order' : 'booking'}.
+                </p>
+                <div class="bg-white bg-opacity-20 rounded-lg p-3 mb-4">
+                    <p class="text-xs text-center">
+                        <i class="fas fa-shield-alt mr-1"></i>
+                        Your location is only used for service delivery and is not stored or shared.
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <button type="button" onclick="retryLocationForAction('${actionType}', ${JSON.stringify(actionData).replace(/"/g, '&quot;')})" 
+                            class="w-full bg-white text-orange-600 px-4 py-3 rounded-full font-semibold text-sm hover:bg-gray-100 transition-colors">
+                        <i class="fas fa-location-arrow mr-2"></i>
+                        Enable Location & Continue
+                    </button>
+                    <button type="button" onclick="closeLocationPopup()" 
+                            class="w-full bg-transparent border-2 border-white text-white px-4 py-2 rounded-full font-semibold text-sm hover:bg-white hover:text-orange-600 transition-colors">
+                        Cancel ${actionType === 'checkout' ? 'Order' : 'Booking'}
+                    </button>
+                </div>
+            `;
+            
+            popup.classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+
+        function retryLocationForAction(actionType, actionData) {
+            closeLocationPopup();
+            
+            // Store the pending action
+            pendingAction = actionType;
+            pendingData = actionData;
+            
+            // Request location permission
+            requestLocationPermission();
+            
+            // Set up a callback for when location is obtained
+            const checkLocationInterval = setInterval(() => {
+                if (currentLocation && currentLocation.accuracy <= 100) {
+                    clearInterval(checkLocationInterval);
+                    
+                    // Execute the pending action
+                    if (pendingAction === 'checkout') {
+                        sendWhatsAppOrder(pendingData, currentLocation);
+                    } else if (pendingAction === 'booking') {
+                        sendBookingWhatsApp(pendingData.type, pendingData.subtype, pendingData.data, currentLocation);
+                    }
+                    
+                    // Clear pending action
+                    pendingAction = null;
+                    pendingData = null;
+                }
+            }, 1000);
+            
+            // Clear interval after 30 seconds if no location
+            setTimeout(() => {
+                clearInterval(checkLocationInterval);
+                if (pendingAction) {
+                    showToast('❌ Location required for service. Please try again.', 'error');
+                    pendingAction = null;
+                    pendingData = null;
+                }
+            }, 30000);
         }
 
 
@@ -3017,5 +3438,5 @@ Contact customer for service coordination.`;
             }
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9905f8fb46f2ca8c',t:'MTc2MDc2ODg3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99060ab555fe9149',t:'MTc2MDc2OTYwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
